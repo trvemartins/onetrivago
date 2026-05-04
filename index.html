@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Deal Finder Prototype — trivago</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --t1:#111;--t2:#444;--t3:#555;--tm:#888;
+  --sk:#222;--sl:#ddd;
+  --bp:#f3f4f6;--bc:#fafafa;--bb:#fff;--ba:#f1f1f1;--bf:#eaeaea;
+  --acc:#fff8e1;
+  --bw:#fef3e7;--sw:#b45309;
+  --bh:#e8f5e9;--sh:#1a7f37;
+  --bt:#fce7f3;--st:#9d174d;--pk:#9d174d;
+  --bm:#e7f0fa;--sm:#2563eb;--bl:#1e40af;
+  --sv:#1a7f37;--dg:#b91c1c;
+}
+body{font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;background:var(--bp);color:var(--t1);font-size:14px;line-height:1.4}
+
+/* ── Header ── */
+#hdr{background:#fff;border-bottom:1px solid var(--sl);padding:10px 24px 0;max-width:1280px;margin:0 auto}
+.src-label{font-size:11px;color:var(--tm);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.src-btns{display:flex;gap:6px;flex-wrap:wrap}
+.src-btn{padding:5px 11px;border:1.5px solid var(--sl);border-radius:6px;background:var(--bb);font-size:12px;cursor:pointer;white-space:nowrap;transition:border-color .15s}
+.src-btn:hover{border-color:#999}
+.src-btn.on{border-color:var(--sk);background:var(--t1);color:#fff}
+.sig{font-size:11px;color:var(--t3);font-family:ui-monospace,monospace;padding:6px 0 10px}
+
+/* ── Main layout ── */
+#main{max-width:1280px;margin:0 auto;padding:24px;display:flex;gap:32px;align-items:flex-start}
+
+/* ── Phone ── */
+#pcol{flex-shrink:0;width:420px}
+#pframe{width:380px;height:760px;border:2px solid #000;border-radius:22px;background:var(--bc);overflow:hidden;position:relative;display:flex;flex-direction:column;margin:0 auto}
+#pstatus{flex-shrink:0;height:28px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:10px;color:var(--t2);border-bottom:1px solid var(--sl)}
+#pnav{flex-shrink:0;height:44px;background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--sl)}
+.nav-ttl{font-size:13px;font-weight:600;letter-spacing:-.01em}
+.ham{width:22px;display:flex;flex-direction:column;gap:4px;cursor:pointer}
+.ham span{display:block;height:2px;background:var(--t1);border-radius:1px}
+#pcontent{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bc);position:relative}
+#pcontent::-webkit-scrollbar{width:3px}
+#pcontent::-webkit-scrollbar-thumb{background:var(--sl)}
+#pbnav{flex-shrink:0;height:52px;background:#fff;border-top:1px solid var(--sl);display:flex}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:10px;color:var(--tm);cursor:pointer;gap:2px}
+.bnav-item.on{color:var(--t1);font-weight:600}
+.bnav-ic{font-size:16px;line-height:1}
+
+/* ── Drawer system ── */
+#dcon{position:absolute;top:72px;left:0;right:0;bottom:52px;pointer-events:none;z-index:100}
+#dbdrop{position:absolute;inset:0;background:rgba(0,0,0,.3);pointer-events:none;opacity:0;transition:opacity .25s}
+#dbdrop.on{opacity:1;pointer-events:all}
+#drawer{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:16px 16px 0 0;pointer-events:auto;transform:translateY(110%);transition:transform .25s ease-out;display:flex;flex-direction:column;max-height:100%}
+#drawer.on{transform:translateY(0)}
+.d-handle{flex-shrink:0;display:flex;justify-content:center;padding:10px 0 6px}
+.d-pill{width:36px;height:4px;background:var(--sl);border-radius:2px}
+.d-hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 14px 10px;border-bottom:1px solid var(--sl)}
+.d-ttl{font-size:14px;font-weight:600;flex:1;text-align:center}
+.d-x,.d-bk{width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;border-radius:50%;background:var(--ba);border:none;flex-shrink:0}
+.d-share{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--tm);flex-shrink:0}
+.d-body{flex:1;overflow-y:auto;padding:14px}
+.d-body::-webkit-scrollbar{width:3px}
+.d-body::-webkit-scrollbar-thumb{background:var(--sl)}
+.d-foot{flex-shrink:0;padding:10px 14px;border-top:1px solid var(--sl)}
+
+/* ── Buttons ── */
+.btn-p{width:100%;padding:13px;border:none;border-radius:10px;background:var(--t1);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.btn-p.pk{background:var(--pk)}
+.btn-p.bl{background:var(--bl)}
+.btn-p.gn{background:var(--sv)}
+.btn-p.rd{background:var(--dg)}
+.btn-s{width:100%;padding:11px;border:1.5px solid var(--sk);border-radius:10px;background:#fff;color:var(--t1);font-size:13px;font-weight:500;cursor:pointer;margin-top:6px}
+
+/* ── Form ── */
+.f-field{margin-bottom:12px}
+.f-lbl{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.f-req{color:var(--dg)}
+.f-inp{width:100%;padding:10px 12px;border:1.5px solid var(--sl);border-radius:8px;background:var(--bb);font-size:13px;color:var(--tm);cursor:pointer;text-align:left;display:flex;align-items:center;justify-content:space-between}
+.f-inp.filled{color:var(--t1);border-color:var(--sk)}
+
+/* ── Chips ── */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{padding:5px 10px;border:1.5px solid var(--sl);border-radius:20px;font-size:12px;cursor:pointer;background:#fff;color:var(--t2);white-space:nowrap}
+.chip.on{border-color:var(--sk);background:var(--t1);color:#fff}
+.vchip{padding:5px 12px;border:1px solid var(--sl);border-radius:20px;font-size:11px;cursor:pointer;background:#fff}
+
+/* ── Proof bar ── */
+.proof{background:var(--bf);border:1px solid var(--sl);border-radius:6px;padding:10px 12px;margin:10px 0}
+.proof.gn{background:#f0faf3;border-color:var(--sh)}
+.proof-ttl{font-size:12px;font-weight:600;margin-bottom:3px}
+.proof-sub{font-size:11px;color:var(--tm)}
+
+/* ── Section label ── */
+.slbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);margin-bottom:6px}
+
+/* ── Heroes ── */
+.hw{background:var(--bw);border:1.5px solid var(--sw);border-radius:12px;padding:14px;margin:10px 10px 0}
+.hh{background:var(--bh);border:1.5px solid var(--sh);border-radius:12px;padding:14px;margin:10px 10px 0}
+.h-src{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--sw);margin-bottom:4px}
+.hh .h-src{color:var(--sh)}
+.h-ttl{font-size:16px;font-weight:700;margin-bottom:4px}
+.h-sub{font-size:12px;color:var(--t2);margin-bottom:8px}
+
+/* ── Result count ── */
+.rcbar{display:flex;align-items:center;justify-content:space-between;padding:8px 10px 4px}
+.rc-ttl{font-size:13px;font-weight:600}
+.sort-lnk{font-size:11px;color:var(--tm);text-decoration:underline;cursor:pointer}
+
+/* ── Deal grid ── */
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:6px 10px 10px}
+.dcard{background:var(--bb);border:1px solid var(--sl);border-radius:8px;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.dcard:hover{border-color:#999}
+.dcard-img{background:var(--bf);height:72px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--tm);border-bottom:1px solid var(--sl)}
+.dcard-body{padding:8px}
+.badge{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-bottom:4px}
+.badge.t{background:var(--bt);color:var(--pk)}
+.badge.m{background:var(--bm);color:var(--bl)}
+.dcard-nm{font-size:11px;font-weight:600;margin-bottom:2px;line-height:1.3}
+.dcard-pr{font-size:14px;font-weight:700;margin-bottom:2px}
+.dcard-sv{font-size:10px;color:var(--sv)}
+
+/* ── Cold landing ── */
+.cold-hero{padding:20px 10px 10px}
+.cold-h1{font-size:18px;font-weight:700;line-height:1.25;margin-bottom:4px}
+.cold-sub{font-size:13px;color:var(--t3);margin-bottom:16px}
+.etiles{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.etile{background:var(--bb);border:1.5px solid var(--sl);border-radius:10px;padding:14px;cursor:pointer;transition:border-color .15s;display:flex;align-items:center;justify-content:space-between}
+.etile:hover{border-color:#999}
+.etile.acc{background:var(--acc)}
+.etile-lbl{font-size:13px;font-weight:600}
+.etile-sub{font-size:11px;color:var(--tm);margin-top:2px}
+.etile-arr{color:var(--tm);font-size:14px}
+.vsec{padding:0 10px 10px}
+.rsec{padding:4px 10px 10px}
+.rcards{display:flex;flex-direction:column;gap:6px}
+.rcard{background:var(--bb);border:1px solid var(--sl);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.rcard-nm{font-size:12px;font-weight:600}
+.rcard-meta{font-size:11px;color:var(--tm)}
+.rcard-act{font-size:11px;color:var(--tm)}
+
+/* ── Adjust filter ── */
+.adj-fil{margin:4px 10px 10px;padding:12px;border:1.5px solid var(--sl);border-radius:10px;background:var(--bb);text-align:center;cursor:pointer;font-size:12px;font-weight:600;color:var(--t2)}
+.adj-fil:hover{border-color:#999}
+
+/* ── GHA note ── */
+.gha-wrap{padding:10px}
+.gha-box{border:2px dashed var(--dg);border-radius:10px;padding:14px}
+.gha-ttl{font-size:13px;font-weight:700;color:var(--dg);margin-bottom:8px}
+.gha-body{font-size:12px;color:var(--t2);line-height:1.5;margin-bottom:12px}
+
+/* ── Calendar ── */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin:8px 0}
+.cal-dl{text-align:center;font-size:10px;color:var(--tm);padding:2px 0}
+.cal-c{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;font-size:11px;border:1px solid transparent;padding:2px}
+.cal-c.cheap{background:#dcfce7}
+.cal-c.exp{background:#fee2e2}
+.cal-c.typ{background:#fff;border-color:var(--sl)}
+.cal-c.s0,.cal-c.s1{background:#111;color:#fff}
+.cal-c.rng{background:#333;color:#fff}
+.cal-dot{width:4px;height:4px;border-radius:50%;background:#999;margin-top:1px}
+.cal-c.cheap .cal-dot{background:var(--sv)}
+.cal-c.exp .cal-dot{background:var(--dg)}
+.cal-c.s0 .cal-dot,.cal-c.s1 .cal-dot,.cal-c.rng .cal-dot{background:rgba(255,255,255,.5)}
+
+/* ── Budget ── */
+.budg-disp{text-align:center;padding:16px 0 8px}
+.budg-amt{font-size:36px;font-weight:800;margin-bottom:3px}
+.budg-lbl{font-size:11px;color:var(--tm)}
+input[type=range]{width:100%;margin:8px 0;accent-color:var(--t1)}
+.lprev{background:#f0faf3;border:1px solid var(--sh);border-radius:8px;padding:10px 12px;margin:10px 0}
+.lprev-ttl{font-size:12px;font-weight:700;color:var(--sv);margin-bottom:6px}
+.lprev-row{font-size:12px;color:var(--t2);margin-bottom:2px}
+.alt-tile{background:var(--bf);border-radius:8px;padding:10px 12px;font-size:12px;margin-top:8px;cursor:pointer;display:flex;align-items:center;gap:8px}
+
+/* ── Dest picker ── */
+.dest-search{width:100%;padding:9px 12px;border:1.5px solid var(--sl);border-radius:8px;font-size:13px;margin-bottom:10px;outline:none}
+.dest-search:focus{border-color:var(--sk)}
+.dest-list{display:flex;flex-direction:column;gap:2px;margin-bottom:10px}
+.dest-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:12px}
+.dest-item:hover{background:var(--ba)}
+.dest-del{font-size:11px;color:var(--tm)}
+.dg2{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}
+.dcrd{background:var(--bb);border:1px solid var(--sl);border-radius:8px;padding:10px;cursor:pointer}
+.dcrd:hover{border-color:#999}
+.dcrd-nm{font-size:12px;font-weight:600;margin-bottom:3px}
+.dcrd-pr{font-size:13px;font-weight:700;margin-bottom:2px}
+.dcrd-dl{font-size:11px;color:var(--tm)}
+
+/* ── Deal detail ── */
+.det-car{background:var(--bf);height:130px;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--tm);border-radius:8px;margin-bottom:10px}
+.det-nm{font-size:15px;font-weight:700;margin-bottom:3px}
+.det-rat{font-size:12px;color:var(--t2);margin-bottom:8px}
+.det-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;margin-bottom:10px}
+.det-badge.t{background:var(--bt);color:var(--pk)}
+.det-badge.m{background:var(--bm);color:var(--bl)}
+.det-pr{font-size:24px;font-weight:700}
+.det-prsub{font-size:12px;color:var(--tm)}
+.why-panel{background:#f0faf3;border:1px solid var(--sh);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.why-ttl{font-size:12px;font-weight:700;color:var(--sv);margin-bottom:6px}
+.why-row{font-size:11px;color:var(--t2);margin-bottom:3px}
+.inc-list{font-size:12px;color:var(--t2);line-height:1.8;margin-bottom:10px}
+.cmp-mod{border:1px solid var(--sl);border-radius:8px;overflow:hidden;margin-bottom:10px}
+.cmp-ttl{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:8px 10px;background:var(--ba);color:var(--t2)}
+.cmp-row{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-top:1px solid var(--sl);font-size:12px}
+.cmp-best{color:var(--sv);font-size:10px}
+.shift-tile{background:var(--acc);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px}
+.shift-ttl{font-weight:600;margin-bottom:4px}
+.facts{font-size:12px;color:var(--t2);line-height:1.7;margin-bottom:10px}
+.rev{font-size:12px;color:var(--t2);background:var(--ba);border-radius:6px;padding:10px 12px;margin-bottom:10px;line-height:1.5}
+.sec-acts{display:flex;gap:6px;margin-top:6px}
+.btn-ic{flex:1;padding:9px;border:1.5px solid var(--sl);border-radius:8px;background:#fff;font-size:12px;cursor:pointer;text-align:center}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(16px);background:#111;color:#fff;padding:12px 20px;border-radius:10px;font-size:12px;max-width:440px;text-align:center;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;z-index:9999;line-height:1.5;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Side panel ── */
+#spanel{flex:1;position:sticky;top:24px;background:#fff;border:1px solid var(--sl);border-radius:12px;padding:16px;max-height:calc(100vh - 80px);overflow-y:auto}
+.sp-ttl{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
+.sp-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:5px}
+.sp-key{font-size:11px;color:var(--tm);width:56px;flex-shrink:0;padding-top:2px}
+.sp-val{font-size:12px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--ba);line-height:1.4}
+.sp-val.cold{background:var(--acc)}
+.sp-val.warm{background:var(--bw);color:var(--sw)}
+.sp-val.hot{background:var(--bh);color:var(--sh)}
+.sp-val.gha{background:#fee2e2;color:var(--dg)}
+.sp-hr{border:none;border-top:1px solid var(--sl);margin:12px 0}
+.path-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.path-item{font-size:11px;color:var(--t3);display:flex;gap:6px;line-height:1.4}
+.path-n{color:var(--tm);flex-shrink:0;font-size:10px;padding-top:1px;min-width:16px}
+.path-item.lat{font-weight:700;color:var(--t1)}
+.path-item.exit{color:var(--pk)}
+.reset-btn{width:100%;margin-top:12px;padding:9px;border:1.5px solid var(--sl);border-radius:8px;background:#fff;font-size:12px;cursor:pointer;color:var(--t2)}
+.reset-btn:hover{border-color:var(--sk)}
+.leg-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t2)}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="hdr">
+  <div class="src-label">Traffic source</div>
+  <div class="src-btns" id="src-btns"></div>
+  <div class="sig" id="sig"></div>
+</div>
+
+<div id="main">
+  <div id="pcol">
+    <div id="pframe">
+      <div id="pstatus">
+        <span>9:41</span>
+        <span style="display:flex;gap:5px;align-items:center;font-size:10px">●●●● WiFi 🔋</span>
+      </div>
+      <div id="pnav">
+        <div style="width:24px"></div>
+        <div class="nav-ttl">trivago · Deal Finder</div>
+        <div class="ham"><span></span><span></span><span></span></div>
+      </div>
+      <div id="pcontent"></div>
+      <div id="dcon">
+        <div id="dbdrop"></div>
+        <div id="drawer"></div>
+      </div>
+      <div id="pbnav">
+        <div class="bnav-item on"><div class="bnav-ic">🔍</div>Find</div>
+        <div class="bnav-item"><div class="bnav-ic">❤</div>Saved</div>
+        <div class="bnav-item"><div class="bnav-ic">🔔</div>Alerts</div>
+        <div class="bnav-item"><div class="bnav-ic">👤</div>You</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="spanel">
+    <div class="sp-ttl">Current state</div>
+    <div id="sp-state"></div>
+    <hr class="sp-hr">
+    <div class="sp-ttl">Path</div>
+    <ol id="sp-path" class="path-list"></ol>
+    <button class="reset-btn" id="reset-btn">↺ Reset to source selection</button>
+    <hr class="sp-hr">
+    <div class="sp-ttl" style="margin-bottom:8px">Legend</div>
+    <div style="margin-bottom:8px">
+      <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Landing states</div>
+      <div class="leg-grid">
+        <div class="leg-item"><div class="leg-dot" style="background:#fff8e1;border:1px solid #ccc"></div>Cold</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fef3e7;border:1px solid #b45309"></div>Warm</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#e8f5e9;border:1px solid #1a7f37"></div>Hot</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#fee2e2;border:2px dashed #b91c1c"></div>GHA</div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:10px;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px">Exit types</div>
+      <div class="leg-grid">
+        <div class="leg-item"><div class="leg-dot" style="background:#fce7f3;border:1px solid #9d174d"></div>trIC funnel</div>
+        <div class="leg-item"><div class="leg-dot" style="background:#e7f0fa;border:1px solid #2563eb"></div>OTA clickout</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+const SOURCES = [
+  { id:'email',  label:'📧 Email — themed',      landing:'warm', signal:'theme=beach, max_price=99/n',                    strategy:'Email "Beach deals under €99" → warm landing with pre-applied filter chips', heroLbl:'FROM YOUR EMAIL',  heroTtl:'Beach deals under €99',  chips:['🏖 Beach','€99/night max'] },
+  { id:'push',   label:'🔔 Push — price drop',   landing:'hot',  signal:'hotel=Hotel Lapa Palace, drop=18%',              strategy:'Push notification → hot landing with specific deal as hero',                hotType:'push' },
+  { id:'alert',  label:'⏰ Price alert hit',      landing:'hot',  signal:'hotel=Hotel Lapa Palace, target=320, current=312',strategy:'Alert hit → hot landing with verified deal',                               hotType:'alert' },
+  { id:'sem',    label:'💰 Paid (SEM)',           landing:'warm', signal:'keyword="cheap Lisbon hotels"',                  strategy:'SEM ad click → warm landing with destination pre-filled',                  heroLbl:'FROM YOUR SEARCH', heroTtl:'Cheap Lisbon hotels',    chips:['📍 Lisbon','Price: low–high'] },
+  { id:'seo',    label:'🔍 SEO',                  landing:'warm', signal:'keyword="summer beach deals 2026"',              strategy:'Organic search → warm landing with theme pre-applied',                     heroLbl:'FROM YOUR SEARCH', heroTtl:'Summer beach deals 2026',chips:['🏖 Beach','☀ Summer 2026'] },
+  { id:'brand',  label:'🌐 Brand / direct',       landing:'cold', signal:'none',                                           strategy:'Brand/direct → cold landing with 3-tile entry' },
+  { id:'resume', label:'📌 Resume / saved',       landing:'warm', signal:'prior_session=Athens Jul 4-10',                  strategy:'Resume link → warm landing with previous query restored',                  heroLbl:'WELCOME BACK',     heroTtl:'Athens, Jul 4–10',       chips:['📍 Athens','📅 Jul 4–10'] },
+  { id:'gha',    label:'🅖 GHA / meta',           landing:'gha',  signal:'hotel + dates from GHA ad',                      strategy:'GHA → item page in core (NOT Deal Finder); shows explanatory note' },
+];
+
+const DEALS = [
+  { id:'d1', type:'t', nm:'Hotel Lapa Palace',   rat:'★ 8.9', revs:'2,140 reviews', pr:312, nights:7, sv:'✦ Only on trivago — exclusive rate',  badge:'✦ Only on trivago',          cmp:[{s:'trivago (trIC)',pr:312,best:true},{s:'Booking.com',pr:338},{s:'Expedia',pr:354},{s:'Hotels.com',pr:358},{s:'Direct',pr:380}], cta:'Book on trivago →',       ct:'tric', city:'Lisbon', dates:'Jun 8–15', room:'Superior Double',     cancel:'Free cancellation', pct:34 },
+  { id:'d2', type:'m', nm:'Hotel Eden Lisboa',   rat:'★ 8.4', revs:'1,820 reviews', pr:89,  nights:7, sv:'−24% vs typical',                      badge:'🔎 Best price across 8 sites', cmp:[{s:'Booking.com',pr:89,best:true},{s:'Expedia',pr:96},{s:'Hotels.com',pr:99},{s:'Agoda',pr:101},{s:'Direct',pr:115}], cta:'Continue to Booking.com →', ct:'ota', site:'Booking.com', city:'Lisbon', dates:'Jun 8–15', room:'Standard Room',       cancel:'Free cancellation', pct:24 },
+  { id:'d3', type:'m', nm:'Stars & Surf Resort', rat:'★ 8.6', revs:'980 reviews',   pr:94,  nights:7, sv:'−19% vs typical',                      badge:'🔎 Best price across 6 sites', cmp:[{s:'Hotels.com',pr:94,best:true},{s:'Booking.com',pr:102},{s:'Expedia',pr:108},{s:'Direct',pr:116}], cta:'Continue to Hotels.com →',  ct:'ota', site:'Hotels.com',  city:'Algarve',dates:'Jun 10–17',room:'Ocean View Double',    cancel:'Free cancellation', pct:19 },
+  { id:'d4', type:'m', nm:'Bairro Alto Hotel',   rat:'★ 9.0', revs:'3,210 reviews', pr:97,  nights:7, sv:'−21% vs typical',                      badge:'🔎 Best price across 5 sites', cmp:[{s:'Expedia',pr:97,best:true},{s:'Booking.com',pr:104},{s:'Hotels.com',pr:110},{s:'Direct',pr:122}], cta:'Continue to Expedia →',     ct:'ota', site:'Expedia',      city:'Lisbon', dates:'Jun 8–15', room:'Deluxe Double',       cancel:'Non-refundable',   pct:21 },
+];
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+let S = {
+  src: 'brand',
+  view: 'landing',      // landing | result | cold-override
+  drawerType: null,     // form type or picker type or 'deal'
+  parentDrawer: null,   // form drawer to return to from sub-picker
+  activeDeal: null,
+  path: [],
+  fd: { dates:null, dest:null, budget:null, region:'Anywhere', tripLen:'5–7', timeWindow:'Next 3 months', vibes:['🌅 Warm'] },
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const getSrc = () => SOURCES.find(s => s.id === S.src);
+const getDeal = () => DEALS.find(d => d.id === S.activeDeal);
+
+function addPath(txt, type='n') {
+  S.path.push({txt, type});
+  renderPanel();
+}
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('on'), 5000);
+}
+
+// ── Render: source bar ────────────────────────────────────────────────────────
+
+function renderSrcBar() {
+  const src = getSrc();
+  document.getElementById('src-btns').innerHTML = SOURCES.map(s =>
+    `<button class="src-btn${s.id===S.src?' on':''}" data-src="${s.id}">${s.label}</button>`
+  ).join('');
+  document.getElementById('sig').textContent = `entry signal: ${src.signal}  →  ${src.strategy}`;
+}
+
+// ── Render: phone content ─────────────────────────────────────────────────────
+
+function renderContent() {
+  const el = document.getElementById('pcontent');
+  const src = getSrc();
+  if (S.view === 'cold-override') { el.innerHTML = htmlCold(); return; }
+  if (src.landing === 'gha')  { el.innerHTML = htmlGHA();    return; }
+  if (S.view === 'result')    { el.innerHTML = htmlResult(); return; }
+  if (src.landing === 'cold') { el.innerHTML = htmlCold();   return; }
+  if (src.landing === 'warm') { el.innerHTML = htmlWarm();   return; }
+  if (src.landing === 'hot')  { el.innerHTML = htmlHot();    return; }
+}
+
+function htmlProof(green) {
+  return `<div class="proof${green?' gn':''}">
+    <div class="proof-ttl">${green ? '✓ Verified just now · Best price across 8 sites · ★ 8.7' : 'Why "deal" means something here'}</div>
+    <div class="proof-sub">200+ sites verified · Avg saving €87 last 30d</div>
+  </div>`;
+}
+
+function htmlTiles(small) {
+  const p = small ? 'style="padding:10px 12px"' : '';
+  const ls = small ? 'style="font-size:12px"' : '';
+  return `
+  <div class="etile" data-tile="when-not-where" ${p}>
+    <div><div class="etile-lbl" ${ls}>I know when — not where</div>${!small?'<div class="etile-sub">Dates locked, destination open</div>':''}</div>
+    <div class="etile-arr">›</div>
+  </div>
+  <div class="etile" data-tile="where-not-when" ${p}>
+    <div><div class="etile-lbl" ${ls}>I know where — not when</div>${!small?'<div class="etile-sub">Destination set, flexible on dates</div>':''}</div>
+    <div class="etile-arr">›</div>
+  </div>
+  <div class="etile acc" data-tile="surprise" ${p}>
+    <div><div class="etile-lbl" ${ls}>✨ Surprise me</div>${!small?'<div class="etile-sub">Pure discovery mode</div>':''}</div>
+    <div class="etile-arr">›</div>
+  </div>`;
+}
+
+function htmlDCard(d) {
+  return `<div class="dcard" data-deal="${d.id}">
+    <div class="dcard-img">[ photo ]</div>
+    <div class="dcard-body">
+      <div class="badge ${d.type}">${d.type==='t'?'✦ trIC':'🔎 meta'}</div>
+      <div class="dcard-nm">${d.nm}</div>
+      <div style="font-size:11px;color:var(--tm);margin-bottom:3px">${d.rat} · ${d.city}</div>
+      <div class="dcard-pr">€${d.pr}</div>
+      <div class="dcard-sv">${d.sv}</div>
+    </div>
+  </div>`;
+}
+
+function htmlCold() {
+  return `<div class="cold-hero">
+    <div class="cold-h1">Find a deal worth booking.</div>
+    <div class="cold-sub">Tell us how you're planning — we'll do the rest.</div>
+    <div class="etiles">${htmlTiles(false)}</div>
+    <div class="proof" style="border-color:var(--sl)">
+      <div class="proof-ttl">Why "deal" means something here</div>
+      <div class="proof-sub">200+ sites verified · Avg saving €87 last 30d</div>
+    </div>
+  </div>
+  <div class="vsec">
+    <div class="slbl">Vibe</div>
+    <div class="chips">${['🌅 Warm','🏖 Beach','🏙 City','⛰ Mountain','🍷 Foodie'].map(v=>`<div class="vchip">${v}</div>`).join('')}</div>
+  </div>
+  <div class="rsec">
+    <div class="slbl" style="margin-bottom:6px">Pick up where you left off</div>
+    <div class="rcards">
+      <div class="rcard"><div><div class="rcard-nm">Athens</div><div class="rcard-meta">Jul 4–10 · 2 adults</div></div><div class="rcard-act">Resume →</div></div>
+      <div class="rcard"><div><div class="rcard-nm">Split</div><div class="rcard-meta">Aug 2–9 · 2 adults</div></div><div class="rcard-act">Resume →</div></div>
+    </div>
+  </div>`;
+}
+
+function htmlWarm() {
+  const src = getSrc();
+  const chips = (src.chips||[]).map(c=>`<div class="chip on" style="display:inline-flex;align-items:center;gap:4px">${c} <span style="font-size:10px;opacity:.7">✕</span></div>`).join('');
+  return `<div class="hw">
+    <div class="h-src">${src.heroLbl||'FROM YOUR ENTRY'}</div>
+    <div class="h-ttl">${src.heroTtl||'Deals for you'}</div>
+    <div class="h-sub">38 places match · refreshed today</div>
+    <div class="chips">${chips}<div class="chip">+ Add</div></div>
+  </div>
+  <div style="padding:0 10px">${htmlProof()}</div>
+  <div class="rcbar"><div class="rc-ttl">38 results</div><div class="sort-lnk">Sort: best deal ↓</div></div>
+  <div class="dgrid">${DEALS.map(htmlDCard).join('')}</div>
+  <div class="adj-fil" id="adj-fil">▾ Adjust filter</div>`;
+}
+
+function htmlHot() {
+  const src = getSrc();
+  const isAlert = src.hotType === 'alert';
+  return `<div class="hh">
+    <div class="h-src">${isAlert ? '🔔 YOUR ALERT HIT · 2 hours ago' : '🔔 PRICE DROP · saved destination'}</div>
+    <div class="h-ttl">Lisbon · Hotel Lapa Palace</div>
+    <div class="h-sub">${isAlert ? '€312 — €8 below your target' : 'Was €420, now €338'}</div>
+    <div style="font-size:12px;color:var(--sv);font-weight:600;margin-bottom:10px">${isAlert ? '↓ Alert target reached · Save €8 now' : '↓ −18% drop confirmed · Save €82'}</div>
+    ${htmlProof(true)}
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:6px">
+      <button class="btn-p pk" data-exit="tric" data-hotel="Hotel Lapa Palace">Book this deal →</button>
+      <button class="btn-s" id="adj-alert-btn">Adjust alert</button>
+    </div>
+  </div>
+  <div style="padding:0 10px">${htmlProof()}</div>
+  <div class="rcbar"><div class="rc-ttl">More cities, similar prices</div></div>
+  <div class="dgrid">${DEALS.slice(1,3).map(htmlDCard).join('')}</div>
+  <div style="padding:4px 10px 6px">
+    <div class="slbl" style="margin-bottom:8px">Looking for something else?</div>
+    <div class="etiles" style="gap:6px">${htmlTiles(true)}</div>
+  </div>`;
+}
+
+function htmlGHA() {
+  return `<div class="gha-wrap">
+    <div class="gha-box">
+      <div class="gha-ttl">⚠ GHA / Meta traffic bypasses Deal Finder</div>
+      <div class="gha-body">Per the P2 routing logic, Google Hotel Ads and meta traffic lands directly on the <strong>item page in core trivago</strong> — not on the Deal Finder landing page. Hotel and date context from the GHA ad is passed directly, so no entry flow is needed.<br><br>This is an open routing decision requiring alignment between <strong>GL Search</strong> and <strong>GL Book</strong>.</div>
+      <button class="btn-p rd" data-exit="item-page" data-hotel="Hotel Lapa Palace">Simulate item page exit →</button>
+    </div>
+    <div class="proof" style="margin-top:10px;border-color:var(--dg)">
+      <div class="proof-ttl" style="color:var(--dg)">⚠ Open routing decision</div>
+      <div class="proof-sub">GHA bypasses Deal Finder · Needs GL Search + GL Book alignment</div>
+    </div>
+  </div>`;
+}
+
+function htmlResult() {
+  const dest = S.fd.dest || 'Your search';
+  const chips = [S.fd.dest?`📍 ${S.fd.dest}`:null, S.fd.dates?`📅 ${S.fd.dates}`:null, S.fd.budget?`💰 ${S.fd.budget}`:null].filter(Boolean);
+  return `<div class="hw">
+    <div class="h-src">SEARCH RESULTS</div>
+    <div class="h-ttl">${dest}</div>
+    <div class="h-sub">38 places match · refreshed today</div>
+    <div class="chips">${chips.map(c=>`<div class="chip on" style="display:inline-flex;align-items:center;gap:4px">${c} <span style="font-size:10px;opacity:.7">✕</span></div>`).join('')}<div class="chip">+ Add</div></div>
+  </div>
+  <div style="padding:0 10px">${htmlProof()}</div>
+  <div class="rcbar"><div class="rc-ttl">38 results</div><div class="sort-lnk">Sort: best deal ↓</div></div>
+  <div class="dgrid">${DEALS.map(htmlDCard).join('')}</div>`;
+}
+
+// ── Render: drawers ───────────────────────────────────────────────────────────
+
+function chrome(title, isSub) {
+  return `<div class="d-handle"><div class="d-pill"></div></div>
+  <div class="d-hdr">
+    ${isSub ? `<button class="d-bk" id="d-bk">←</button>` : `<button class="d-x" id="d-x">✕</button>`}
+    <div class="d-ttl">${title}</div>
+    ${isSub ? `<div style="width:28px"></div>` : `<div class="d-share">⬆</div>`}
+  </div>`;
+}
+
+function chips(opts, sel, name, multi) {
+  return `<div class="chips">${opts.map(o => {
+    const active = multi ? sel.includes(o) : o===sel;
+    return `<div class="chip${active?' on':''}" data-chip="${name}" data-val="${o}">${o}</div>`;
+  }).join('')}</div>`;
+}
+
+function fInp(key, ph) {
+  const v = S.fd[key];
+  return `<div class="f-inp${v?' filled':''}" data-fpick="${key}">${v||ph} <span style="font-size:11px;color:#ccc">›</span></div>`;
+}
+
+function htmlFormWhen() {
+  return `${chrome('When are you going?',false)}
+  <div class="d-body">
+    <div class="f-field"><div class="f-lbl">Dates <span class="f-req">*</span></div>${fInp('dates','🗓 Choose dates')}</div>
+    <div class="f-field"><div class="f-lbl">Region</div>${chips(['Anywhere','Europe','Asia','Americas'],S.fd.region,'region',false)}</div>
+    <div class="f-field"><div class="f-lbl">Budget <span style="color:var(--tm);font-size:10px">(optional)</span></div>${fInp('budget','€ Max per night')}</div>
+    <div class="f-field"><div class="f-lbl">Trip length</div>${chips(['2','3–4','5–7','8–14','Flexible'],S.fd.tripLen,'tripLen',false)}</div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-submit">Find deals →</button></div>`;
+}
+
+function htmlFormWhere() {
+  return `${chrome('Where are you going?',false)}
+  <div class="d-body">
+    <div class="f-field"><div class="f-lbl">Destination <span class="f-req">*</span></div>${fInp('dest','🔍 City, region or country')}</div>
+    <div class="f-field"><div class="f-lbl">Trip length <span class="f-req">*</span></div>${chips(['2','3–4','5–7','8–14','Flexible'],S.fd.tripLen,'tripLen',false)}</div>
+    <div class="f-field"><div class="f-lbl">Time window <span class="f-req">*</span></div>${chips(['Next 3 months','Next 6 months','Specific dates'],S.fd.timeWindow,'timeWindow',false)}</div>
+    <div class="f-field"><div class="f-lbl">Budget <span style="color:var(--tm);font-size:10px">(optional)</span></div>${fInp('budget','€ Max per night')}</div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-submit">Find deals →</button></div>`;
+}
+
+function htmlFormSurprise() {
+  const vibes = ['🌅 Warm','🏖 Beach','🏙 City','⛰ Mountain','🍷 Foodie','🌙 Nightlife','🌿 Off-grid'];
+  return `${chrome('Surprise me ✨',false)}
+  <div class="d-body">
+    <div class="f-field"><div class="f-lbl">Budget per night <span class="f-req">*</span></div>${fInp('budget','€ Max per night')}</div>
+    <div class="f-field"><div class="f-lbl">Vibe <span class="f-req">*</span></div>${chips(vibes,S.fd.vibes,'vibes',true)}</div>
+    <div class="f-field"><div class="f-lbl">Region scope</div>${chips(['Anywhere','Europe','Within 4hr flight'],S.fd.region,'region',false)}</div>
+    <div class="f-field"><div class="f-lbl">Time window</div>${chips(['Next 3 months','Next 6 months','Specific dates'],S.fd.timeWindow,'timeWindow',false)}</div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-submit">Find deals →</button></div>`;
+}
+
+function htmlDatePicker() {
+  const dow = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  // June 2026 starts on Monday (June 1 = Monday)
+  let cells = '';
+  for (let i=1; i<=30; i++) {
+    let cls = 'typ';
+    if ([3,4,9,10,16,17,22,23,24].includes(i)) cls = 'cheap';
+    else if ([5,6,12,13,19,20,26,27].includes(i)) cls = 'exp';
+    if (i===8) cls = 's0';
+    else if (i===15) cls = 's1';
+    else if (i>8 && i<15) cls = 'rng';
+    cells += `<div class="cal-c ${cls}">${i}<div class="cal-dot"></div></div>`;
+  }
+  return `${chrome('Choose dates',true)}
+  <div class="d-body">
+    <div class="chips" style="margin-bottom:10px">${['Specific dates','This weekend','Next week','Last minute'].map((c,i)=>`<div class="chip${i===0?' on':''}">${c}</div>`).join('')}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600;margin-bottom:6px"><span style="cursor:pointer">‹</span><span>June 2026</span><span style="cursor:pointer">›</span></div>
+    <div class="cal-grid">
+      ${dow.map(d=>`<div class="cal-dl">${d}</div>`).join('')}
+      ${cells}
+    </div>
+    <div style="display:flex;gap:12px;font-size:10px;color:var(--tm);margin:6px 0 10px">
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#dcfce7;border-radius:2px;display:inline-block"></span>Cheap</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#fff;border:1px solid #ddd;border-radius:2px;display:inline-block"></span>Typical</span>
+      <span style="display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#fee2e2;border-radius:2px;display:inline-block"></span>Expensive</span>
+    </div>
+    <div class="proof gn"><div class="proof-ttl">Jun 8 – 15 · 7 nights · Estimated: €312 (−34% vs typical for Lisbon)</div></div>
+    <div style="background:var(--bf);border-radius:8px;padding:10px 12px;margin:8px 0;display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:12px;font-weight:600">Allow ±3 days flexibility</div><div style="font-size:10px;color:var(--tm);margin-top:2px">May unlock cheaper windows</div></div>
+      <div style="background:var(--sv);color:#fff;padding:3px 8px;border-radius:10px;font-size:11px;font-weight:700">ON</div>
+    </div>
+    <div style="background:var(--acc);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+      <div style="font-size:12px;font-weight:600">💡 Cheapest 7-night window in June</div>
+      <div style="font-size:11px;color:var(--tm);margin-top:2px">Jun 22–29 · €264 (save €48)</div>
+    </div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-apply" data-picktype="dates" data-pickval="Jun 8 – 15 · 7 nights">Apply dates →</button></div>`;
+}
+
+function htmlDestPicker() {
+  return `${chrome('Where to?',true)}
+  <div class="d-body">
+    <input class="dest-search" type="text" placeholder="🔍 City, country, or region">
+    <div class="chips" style="margin-bottom:12px">${['📍 Near me','✨ Anywhere','🌍 By region'].map((c,i)=>`<div class="chip${i===0?' on':''}">${c}</div>`).join('')}</div>
+    <div class="slbl">Recent searches</div>
+    <div class="dest-list">
+      ${['Lisbon','Athens','Split'].map(c=>`<div class="dest-item" data-dest="${c}"><span>🕐 ${c}</span><span class="dest-del">✕</span></div>`).join('')}
+    </div>
+    <div style="background:var(--acc);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:8px">💡 Where €312 gets you in June</div>
+      <div class="dg2">
+        ${[{n:'Lisbon',p:'€312',d:'23 deals'},{n:'Marrakech',p:'€289',d:'18 deals'},{n:'Budapest',p:'€298',d:'31 deals'},{n:'Athens',p:'€305',d:'14 deals'}].map(x=>`
+        <div class="dcrd" data-dest="${x.n}">
+          <div class="dcrd-nm">${x.n}</div>
+          <div class="dcrd-pr">${x.p}</div>
+          <div class="dcrd-dl">${x.d}</div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-apply" data-picktype="dest" data-pickval="Lisbon, Portugal">Apply destination →</button></div>`;
+}
+
+function htmlBudgetPicker() {
+  return `${chrome('Set your budget',true)}
+  <div class="d-body">
+    <div class="chips" style="margin-bottom:12px">${['Per night','Total trip'].map((c,i)=>`<div class="chip${i===0?' on':''}">${c}</div>`).join('')}</div>
+    <div class="budg-disp"><div class="budg-amt">€85</div><div class="budg-lbl">— current setting —</div></div>
+    <input type="range" min="20" max="500" value="85">
+    <div class="chips" style="justify-content:center;margin:8px 0">${['Under €50/n','€50–100/n','€100–200/n','€200+/n','No max'].map((c,i)=>`<div class="chip${i===1?' on':''}">${c}</div>`).join('')}</div>
+    <div class="lprev">
+      <div class="lprev-ttl">💡 What €85/night gets you</div>
+      <div class="lprev-row">73 destinations · 412 hotels</div>
+      <div class="lprev-row">Avg rating: ★ 8.2</div>
+      <div style="font-size:11px;color:var(--t2);margin-top:6px;line-height:1.6">• 3-star city hotels in Lisbon, Porto, Budapest<br>• Beach resorts in off-peak June shoulder season<br>• Boutique guesthouses in Marrakech, Athens</div>
+    </div>
+    <div class="alt-tile">🔔 <div><div style="font-size:12px;font-weight:600">Alert me if a deal drops below this budget</div><div style="font-size:10px;color:var(--tm);margin-top:2px">We'll notify you when prices hit €85/night</div></div></div>
+  </div>
+  <div class="d-foot"><button class="btn-p" id="d-apply" data-picktype="budget" data-pickval="€85/night max">Apply €85/night max →</button></div>`;
+}
+
+function htmlDeal() {
+  const d = getDeal();
+  if (!d) return '';
+  const isT = d.type === 't';
+  return `${chrome(d.city+' · '+d.nm,false)}
+  <div class="d-body">
+    <div class="det-car">[ image carousel · 5 photos ]</div>
+    <div class="det-nm">${d.nm}</div>
+    <div class="det-rat">${d.rat} · ${d.revs} · ${d.city}</div>
+    <div class="det-badge ${d.type}">${d.badge}</div>
+    <div style="margin-bottom:10px"><div class="det-pr">€${d.pr}</div><div class="det-prsub">${d.nights} nights · €${Math.round(d.pr/d.nights)}/night</div></div>
+    <div class="why-panel">
+      <div class="why-ttl">Why this is a deal</div>
+      <div class="why-row">↓ ${d.pct}% below typical for ${d.city}</div>
+      <div class="why-row">📅 Lowest in 30 days</div>
+      <div class="why-row">✓ Verified just now · <span style="text-decoration:underline;cursor:pointer">How we check ›</span></div>
+    </div>
+    <div class="inc-list">
+      <div>📅 ${d.dates}</div><div>🛏 ${d.room}</div><div>👤 2 adults</div><div>🔄 ${d.cancel}</div>
+    </div>
+    <div class="cmp-mod">
+      <div class="cmp-ttl">${isT ? 'Same hotel on other sites' : 'Price across all sites'}</div>
+      ${d.cmp.map(c=>`<div class="cmp-row"><span style="color:var(--t2)">${c.s}</span><span style="display:flex;align-items:center;gap:6px"><span style="font-weight:600">€${c.pr}</span>${c.best?`<span class="cmp-best">✓ best</span>`:''}</span></div>`).join('')}
+      ${!isT ? `<div class="cmp-row" style="color:var(--tm);font-size:11px">+ 3 more partners</div>` : ''}
+    </div>
+    <div class="shift-tile">
+      <div class="shift-ttl">💡 Save €48 by shifting dates</div>
+      <div style="color:var(--t3);font-size:11px;margin-top:4px">Jun 22–29 · €264 · 7 nights</div>
+      <div style="color:var(--t3);font-size:11px">Jun 1–8 · €278 · 7 nights</div>
+    </div>
+    <div class="facts">• Stroll the riverside Ribeira district (15 min walk)<br>• Wine bars open until 2am in Bairro Alto<br>• Historic Tram 28 stop 200m from hotel</div>
+    <div class="rev"><strong>${d.rat}</strong> — "Perfect location, great value for money. Room was clean and staff very helpful."<br><span style="color:var(--tm);font-size:11px">— verified guest · May 2026</span></div>
+  </div>
+  <div class="d-foot">
+    <button class="btn-p ${isT?'pk':'bl'}" data-exit="${d.ct}" data-hotel="${d.nm}" data-site="${d.site||''}">${d.cta}</button>
+    <div class="sec-acts">
+      <button class="btn-ic" data-act="alert">🔔 Set alert</button>
+      <button class="btn-ic" data-act="save">❤ Save</button>
+    </div>
+  </div>`;
+}
+
+function drawerHtml(type) {
+  if (type==='when-not-where') return htmlFormWhen();
+  if (type==='where-not-when') return htmlFormWhere();
+  if (type==='surprise')       return htmlFormSurprise();
+  if (type==='date-picker')    return htmlDatePicker();
+  if (type==='dest-picker')    return htmlDestPicker();
+  if (type==='budget-picker')  return htmlBudgetPicker();
+  if (type==='deal')           return htmlDeal();
+  return '';
+}
+
+// ── Drawer open/close ─────────────────────────────────────────────────────────
+
+function openDrawer(type) {
+  S.drawerType = type;
+  const d = document.getElementById('drawer');
+  const b = document.getElementById('dbdrop');
+  d.innerHTML = drawerHtml(type);
+  d.classList.add('on');
+  b.classList.add('on');
+}
+
+function closeDrawer() {
+  const d = document.getElementById('drawer');
+  const b = document.getElementById('dbdrop');
+  d.classList.remove('on');
+  b.classList.remove('on');
+  S.drawerType = null;
+  S.parentDrawer = null;
+}
+
+// ── Render: side panel ────────────────────────────────────────────────────────
+
+function renderPanel() {
+  const src = getSrc();
+  const lnd = src.landing;
+  const vmap = {'landing':'Landing','result':'Result grid','cold-override':'Cold landing (filter adjust)'};
+  let view = vmap[S.view] || S.view;
+  if (S.drawerType) {
+    const dm = {'when-not-where':'Form: when not where','where-not-when':'Form: where not when','surprise':'Form: surprise me','date-picker':'Date picker','dest-picker':'Dest picker','budget-picker':'Budget picker','deal':'Deal detail'};
+    view = dm[S.drawerType] || S.drawerType;
+  }
+
+  document.getElementById('sp-state').innerHTML = `
+    <div class="sp-row"><div class="sp-key">Source</div><div class="sp-val" style="font-size:11px">${src.label}</div></div>
+    <div class="sp-row"><div class="sp-key">Landing</div><div class="sp-val ${lnd}">${lnd.charAt(0).toUpperCase()+lnd.slice(1)}</div></div>
+    <div class="sp-row"><div class="sp-key">View</div><div class="sp-val">${view}</div></div>`;
+
+  document.getElementById('sp-path').innerHTML = S.path.map((p,i) => {
+    const lat = i===S.path.length-1;
+    return `<li class="path-item${lat?' lat':''}${p.type==='exit'?' exit':''}">
+      <span class="path-n">${i+1}.</span>
+      <span>${p.txt}</span>
+    </li>`;
+  }).join('');
+}
+
+// ── Event delegation ──────────────────────────────────────────────────────────
+
+document.addEventListener('click', function(e) {
+  const el = e.target;
+
+  // Source button
+  const srcBtn = el.closest('[data-src]');
+  if (srcBtn && srcBtn.classList.contains('src-btn')) {
+    const id = srcBtn.dataset.src;
+    S.src = id;
+    S.view = 'landing';
+    S.path = [];
+    S.drawerType = null;
+    S.parentDrawer = null;
+    S.activeDeal = null;
+    closeDrawer();
+    const src = getSrc();
+    const lnd = src.landing;
+    addPath(`${src.label} → ${lnd==='gha'?'GHA note':lnd} landing`);
+    renderSrcBar();
+    renderContent();
+    return;
+  }
+
+  // Reset
+  if (el.id === 'reset-btn') {
+    S.src = 'brand'; S.view = 'landing'; S.path = []; S.drawerType = null; S.parentDrawer = null; S.activeDeal = null;
+    closeDrawer();
+    addPath('Brand/direct → cold landing');
+    renderSrcBar();
+    renderContent();
+    return;
+  }
+
+  // Drawer close
+  if (el.id === 'd-x') {
+    addPath('Close drawer → return to landing');
+    closeDrawer();
+    if (S.view === 'cold-override') { S.view = 'landing'; renderContent(); }
+    renderPanel();
+    return;
+  }
+
+  // Sub-picker back
+  if (el.id === 'd-bk') {
+    const prev = S.drawerType;
+    addPath(`← Back from ${prev} → return to form drawer`);
+    openDrawer(S.parentDrawer || 'when-not-where');
+    renderPanel();
+    return;
+  }
+
+  // Backdrop
+  if (el.id === 'dbdrop') {
+    addPath('Tap backdrop → close drawer');
+    closeDrawer();
+    if (S.view === 'cold-override') { S.view = 'landing'; renderContent(); }
+    renderPanel();
+    return;
+  }
+
+  // Deal card
+  const dcard = el.closest('[data-deal]');
+  if (dcard) {
+    const id = dcard.dataset.deal;
+    const d = DEALS.find(x=>x.id===id);
+    if (d) {
+      S.activeDeal = id;
+      addPath(`Tap deal card → ${d.type==='t'?'trIC':'metasearch'} detail drawer opens (${d.nm})`);
+      openDrawer('deal');
+      renderPanel();
+    }
+    return;
+  }
+
+  // Apply picker button
+  const applyBtn = el.closest('#d-apply') || (el.id==='d-apply'?el:null);
+  if (applyBtn) {
+    const pt = applyBtn.dataset.picktype;
+    const pv = applyBtn.dataset.pickval;
+    S.fd[pt] = pv;
+    addPath(`Apply ${pt} picker → ${pv} · return to form drawer`);
+    S.drawerType = null;
+    openDrawer(S.parentDrawer || 'when-not-where');
+    renderPanel();
+    return;
+  }
+
+  // Form field → open picker
+  const fpick = el.closest('[data-fpick]');
+  if (fpick) {
+    const k = fpick.dataset.fpick;
+    const pmap = {dates:'date-picker',dest:'dest-picker',budget:'budget-picker'};
+    if (pmap[k]) {
+      S.parentDrawer = S.drawerType;
+      addPath(`Tap field → ${k} picker opens (sub-drawer)`);
+      openDrawer(pmap[k]);
+      renderPanel();
+    }
+    return;
+  }
+
+  // Dest quick-pick
+  const destItem = el.closest('[data-dest]');
+  if (destItem && document.getElementById('drawer').contains(destItem)) {
+    const dest = destItem.dataset.dest;
+    S.fd.dest = dest + ', Portugal';
+    addPath(`Select destination: ${dest} → field updated`);
+    openDrawer(S.parentDrawer || 'where-not-when');
+    renderPanel();
+    return;
+  }
+
+  // Chip toggles in form drawers
+  const chipEl = el.closest('[data-chip]');
+  if (chipEl && document.getElementById('drawer').contains(chipEl)) {
+    const name = chipEl.dataset.chip;
+    const val = chipEl.dataset.val;
+    if (name === 'vibes') {
+      const idx = S.fd.vibes.indexOf(val);
+      if (idx>-1) S.fd.vibes.splice(idx,1); else S.fd.vibes.push(val);
+    } else {
+      S.fd[name] = val;
+    }
+    document.getElementById('drawer').innerHTML = drawerHtml(S.drawerType);
+    return;
+  }
+
+  // Form submit
+  if (el.id === 'd-submit') {
+    const lmap = {'when-not-where':'I know when — not where','where-not-when':'I know where — not when','surprise':'Surprise me'};
+    addPath(`Submit form (${lmap[S.drawerType]||S.drawerType}) → result grid populates`);
+    S.view = 'result';
+    closeDrawer();
+    renderContent();
+    renderPanel();
+    return;
+  }
+
+  // Adjust filter (warm landing)
+  if (el.id === 'adj-fil' || el.closest('#adj-fil')) {
+    addPath('Tap "Adjust filter" → cold landing');
+    S.view = 'cold-override';
+    renderContent();
+    renderPanel();
+    return;
+  }
+
+  // Adjust alert (hot landing)
+  if (el.id === 'adj-alert-btn') {
+    toast('Alert settings updated — you\'ll be notified when the price changes.');
+    addPath('Tap "Adjust alert" → toast shown (stays in-page)');
+    renderPanel();
+    return;
+  }
+
+  // Secondary actions (set alert / save)
+  const actBtn = el.closest('[data-act]');
+  if (actBtn) {
+    const act = actBtn.dataset.act;
+    if (act==='alert') { toast('🔔 Price alert set. We\'ll notify you if this deal changes.'); addPath('Tap "Set alert" → toast shown (stays in-page)'); }
+    if (act==='save')  { toast('❤ Saved to your list.'); addPath('Tap "Save" → toast shown (stays in-page)'); }
+    renderPanel();
+    return;
+  }
+
+  // Entry tiles
+  const tile = el.closest('[data-tile]');
+  if (tile) {
+    const t = tile.dataset.tile;
+    const lmap = {'when-not-where':'I know when — not where','where-not-when':'I know where — not when','surprise':'Surprise me'};
+    addPath(`Tap '${lmap[t]}' → form drawer opens`);
+    if (S.view==='cold-override') S.view='landing';
+    openDrawer(t);
+    renderPanel();
+    return;
+  }
+
+  // Exit buttons
+  const exitBtn = el.closest('[data-exit]');
+  if (exitBtn) {
+    const et = exitBtn.dataset.exit;
+    const hotel = exitBtn.dataset.hotel || 'Hotel Lapa Palace';
+    const site = exitBtn.dataset.site || '';
+    let msg, pth;
+    if (et==='tric') {
+      msg = `Exit triggered → ${hotel} · trIC booking funnel — internal page transition. Owned by GL Book.`;
+      pth = `EXIT → trIC booking funnel (${hotel})`;
+    } else if (et==='ota') {
+      msg = `Exit triggered → ${hotel} via ${site} · External clickout to partner OTA. Outside trivago entirely.`;
+      pth = `EXIT → OTA clickout (${hotel} via ${site})`;
+    } else {
+      msg = `Item page in core trivago. GHA bypasses Deal Finder per P2 routing.`;
+      pth = `EXIT → Item page in core trivago (GHA routing)`;
+    }
+    toast(msg);
+    addPath(pth, 'exit');
+    return;
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+addPath('Brand/direct → cold landing');
+renderSrcBar();
+renderContent();
+</script>
+</body>
+</html>
