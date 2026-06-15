@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>C-Test Acceptance Tracker – Q2 2026</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    background: #F8F9FB;
+    color: #1F2937;
+    min-height: 100vh;
+  }
+
+  /* ── Spinner overlay ── */
+  #spinner-overlay {
+    position: fixed; inset: 0; background: rgba(248,249,251,0.95);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    z-index: 9999; gap: 16px;
+  }
+  #spinner-overlay.hidden { display: none; }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid #E5E7EB;
+    border-top-color: #6366F1;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spinner-text { color: #6B7280; font-size: 14px; }
+
+  /* ── Auth modal ── */
+  #auth-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9998;
+  }
+  #auth-overlay.hidden { display: none; }
+  .auth-modal {
+    background: #fff; border-radius: 12px; padding: 28px 32px;
+    width: 420px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .auth-modal h2 { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+  .auth-modal p { color: #6B7280; font-size: 12px; margin-bottom: 20px; line-height: 1.5; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 500; margin-bottom: 5px; color: #374151; }
+  .form-group input {
+    width: 100%; padding: 8px 11px; border: 1px solid #D1D5DB; border-radius: 7px;
+    font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .btn-primary {
+    width: 100%; padding: 10px; background: #6366F1; color: #fff;
+    border: none; border-radius: 7px; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: inherit; transition: background 0.15s;
+  }
+  .btn-primary:hover { background: #4F46E5; }
+  .auth-error { color: #DC2626; font-size: 12px; margin-top: 10px; display: none; }
+
+  /* ── Layout ── */
+  .page-wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  /* ── Header ── */
+  .header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    margin-bottom: 24px; gap: 12px;
+  }
+  .header-left h1 { font-size: 20px; font-weight: 700; color: #111827; }
+  .header-left p { font-size: 12px; color: #6B7280; margin-top: 2px; }
+
+  /* ── Save pill ── */
+  .save-pill {
+    font-size: 11px; font-weight: 500; padding: 5px 11px; border-radius: 20px;
+    white-space: nowrap; transition: all 0.2s; margin-top: 4px;
+  }
+  .save-pill.synced    { background: #F3F4F6; color: #6B7280; }
+  .save-pill.saving    { background: #EEF2FF; color: #4338CA; }
+  .save-pill.saved     { background: #D1FAE5; color: #065F46; }
+  .save-pill.failed    { background: #FEE2E2; color: #991B1B; }
+
+  /* ── KPI cards ── */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+  .kpi-card {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 16px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .kpi-label { font-size: 11px; color: #6B7280; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+  .kpi-value { font-size: 26px; font-weight: 700; color: #111827; line-height: 1; }
+  .kpi-sub   { font-size: 11px; color: #9CA3AF; }
+
+  /* ── Progress bar ── */
+  .progress-card {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+    padding: 16px 20px; margin-bottom: 20px;
+  }
+  .progress-label { font-size: 12px; font-weight: 500; margin-bottom: 8px; color: #374151; }
+  .progress-track {
+    height: 10px; background: #F3F4F6; border-radius: 999px; overflow: hidden; margin-bottom: 10px;
+    display: flex;
+  }
+  .progress-fill-confirmed { background: #059669; height: 100%; transition: width 0.4s; }
+  .progress-fill-partial   { background: #D97706; height: 100%; transition: width 0.4s; }
+  .progress-fill-missing   { background: #DC2626; height: 100%; transition: width 0.4s; }
+  .progress-fill-na        { background: #9CA3AF; height: 100%; transition: width 0.4s; }
+  .progress-legend { display: flex; gap: 16px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #4B5563; }
+  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #E5E7EB; }
+  .tab-btn {
+    padding: 9px 16px; font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; background: none; color: #6B7280; border-bottom: 2px solid transparent;
+    margin-bottom: -1px; font-family: inherit; transition: all 0.15s;
+  }
+  .tab-btn.active { color: #6366F1; border-bottom-color: #6366F1; }
+  .tab-btn:hover:not(.active) { color: #374151; }
+
+  /* ── Filters ── */
+  .filters {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px;
+  }
+  .search-box {
+    padding: 7px 11px; border: 1px solid #D1D5DB; border-radius: 7px;
+    font-size: 13px; font-family: inherit; outline: none; width: 240px;
+    transition: border-color 0.15s;
+  }
+  .search-box:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
+  .pill {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    cursor: pointer; border: 1px solid #E5E7EB; background: #fff; color: #6B7280;
+    font-family: inherit; transition: all 0.15s;
+  }
+  .pill.active { background: #6366F1; color: #fff; border-color: #6366F1; }
+  .pill:hover:not(.active) { background: #F3F4F6; color: #374151; }
+
+  /* ── Table ── */
+  .table-wrap { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    background: #F9FAFB; padding: 10px 12px; text-align: left;
+    font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase;
+    letter-spacing: 0.05em; border-bottom: 1px solid #E5E7EB; white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid #F3F4F6; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #FAFAFA; }
+  tbody td { padding: 9px 12px; vertical-align: middle; }
+
+  .month-group-row td {
+    background: #F3F4F6; font-size: 11px; font-weight: 600; color: #6B7280;
+    text-transform: uppercase; letter-spacing: 0.05em; padding: 6px 12px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .test-id a {
+    font-family: 'SF Mono', 'Fira Code', monospace; font-size: 12px;
+    color: #6366F1; text-decoration: none; font-weight: 500;
+  }
+  .test-id a:hover { text-decoration: underline; }
+
+  .platform-badge {
+    display: inline-block; padding: 2px 8px; border-radius: 999px;
+    font-size: 11px; font-weight: 500; white-space: nowrap;
+  }
+  .platform-web     { background: #EEF2FF; color: #3730A3; }
+  .platform-ios     { background: #F0FDF4; color: #166534; }
+  .platform-android { background: #FFF7ED; color: #9A3412; }
+
+  .test-name { color: #1F2937; max-width: 320px; }
+  .date-cell { color: #6B7280; white-space: nowrap; }
+  .pm-cell   { color: #374151; white-space: nowrap; }
+
+  /* ── Status select ── */
+  .status-select {
+    padding: 5px 8px; border-radius: 6px; border-width: 1px; border-style: solid;
+    font-size: 12px; font-family: inherit; cursor: pointer; outline: none;
+    min-width: 220px; transition: all 0.15s; background: #fff;
+  }
+  .status-select:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
+
+  .status-unreviewed { border-color: #D1D5DB; color: #9CA3AF; }
+  .status-confirmed  { border-color: #059669; color: #059669; background: #F0FDF4; }
+  .status-partial    { border-color: #D97706; color: #D97706; background: #FFFBEB; }
+  .status-missing    { border-color: #DC2626; color: #DC2626; background: #FEF2F2; }
+  .status-na         { border-color: #D1D5DB; color: #6B7280; background: #F9FAFB; }
+
+  /* ── PM tab table ── */
+  .pm-table-wrap { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; }
+  .pm-table-wrap table thead th { cursor: default; }
+
+  .pm-confirmed { color: #059669; font-weight: 600; }
+  .pm-partial   { color: #D97706; font-weight: 600; }
+  .pm-missing   { color: #DC2626; font-weight: 600; }
+  .pm-unreviewed { color: #9CA3AF; }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 32px; padding-top: 16px; border-top: 1px solid #E5E7EB;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between;
+    align-items: flex-start; font-size: 11px; color: #9CA3AF; line-height: 1.5;
+  }
+  .footer a { color: #6366F1; text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .empty-row td { text-align: center; color: #9CA3AF; padding: 32px; }
+</style>
+</head>
+<body>
+
+<!-- Spinner -->
+<div id="spinner-overlay">
+  <div class="spinner"></div>
+  <p class="spinner-text">Loading shared statuses…</p>
+</div>
+
+<!-- Auth modal -->
+<div id="auth-overlay" class="hidden">
+  <div class="auth-modal">
+    <h2>Confluence credentials</h2>
+    <p>Enter your Trivago Confluence email and API token. These are stored in your browser session only and never sent anywhere except Confluence.</p>
+    <div class="form-group">
+      <label for="auth-email">Email</label>
+      <input type="email" id="auth-email" placeholder="you@trivago.com" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label for="auth-token">API Token</label>
+      <input type="password" id="auth-token" placeholder="Atlassian API token" autocomplete="current-password">
+    </div>
+    <button class="btn-primary" id="auth-submit">Connect to Confluence</button>
+    <p class="auth-error" id="auth-error">Please enter both email and token.</p>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="page-wrap" id="main-content" style="display:none">
+
+  <div class="header">
+    <div class="header-left">
+      <h1>C-Test Acceptance Tracker</h1>
+      <p>KR Audit &nbsp;·&nbsp; Q2 2026 &nbsp;·&nbsp; Apr 1 – Jun 12</p>
+    </div>
+    <div class="save-pill synced" id="save-pill">Synced</div>
+  </div>
+
+  <!-- KPI cards -->
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Total web tests</div>
+      <div class="kpi-value" id="kpi-total">–</div>
+      <div class="kpi-sub">in scope (web only)</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">✅ Confirmed</div>
+      <div class="kpi-value" id="kpi-confirmed" style="color:#059669">–</div>
+      <div class="kpi-sub">iOS + Android deliverables</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">❌ Missing / partial</div>
+      <div class="kpi-value" id="kpi-missing" style="color:#DC2626">–</div>
+      <div class="kpi-sub">needs deliverables</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">% KR Compliance</div>
+      <div class="kpi-value" id="kpi-pct">–</div>
+      <div class="kpi-sub">confirmed ÷ eligible</div>
+    </div>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="progress-card">
+    <div class="progress-label">Deliverable coverage — web tests only</div>
+    <div class="progress-track">
+      <div class="progress-fill-confirmed" id="bar-confirmed" style="width:0%"></div>
+      <div class="progress-fill-partial"   id="bar-partial"   style="width:0%"></div>
+      <div class="progress-fill-missing"   id="bar-missing"   style="width:0%"></div>
+      <div class="progress-fill-na"        id="bar-na"        style="width:0%"></div>
+    </div>
+    <div class="progress-legend">
+      <span class="legend-item"><span class="legend-dot" style="background:#059669"></span><span id="leg-confirmed">0 confirmed</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#D97706"></span><span id="leg-partial">0 partial</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#DC2626"></span><span id="leg-missing">0 missing</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#9CA3AF"></span><span id="leg-na">0 N/A</span></span>
+      <span class="legend-item"><span class="legend-dot" style="background:#E5E7EB"></span><span id="leg-unreviewed">0 unreviewed</span></span>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="by-test">📋 By test</button>
+    <button class="tab-btn" data-tab="by-pm">👤 By PM</button>
+  </div>
+
+  <!-- By test tab -->
+  <div class="tab-panel active" id="tab-by-test">
+    <div class="filters">
+      <input type="text" class="search-box" id="search-input" placeholder="Search by ID, name or PM…">
+      <div class="pill-group" id="platform-pills">
+        <button class="pill active" data-platform="all">All</button>
+        <button class="pill" data-platform="web">Web</button>
+        <button class="pill" data-platform="ios">iOS</button>
+        <button class="pill" data-platform="android">Android</button>
+      </div>
+      <div class="pill-group" id="month-pills">
+        <button class="pill active" data-month="all">All months</button>
+        <button class="pill" data-month="Apr">Apr</button>
+        <button class="pill" data-month="May">May</button>
+        <button class="pill" data-month="Jun">Jun</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="test-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Platform</th>
+            <th>Date</th>
+            <th>PM</th>
+            <th style="min-width:220px">Test name</th>
+            <th style="min-width:230px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="test-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- By PM tab -->
+  <div class="tab-panel" id="tab-by-pm">
+    <div class="pm-table-wrap">
+      <table id="pm-table">
+        <thead>
+          <tr>
+            <th>PM</th>
+            <th style="text-align:center">Web tests</th>
+            <th style="text-align:center">✅ Confirmed</th>
+            <th style="text-align:center">⚠️ Partial</th>
+            <th style="text-align:center">❌ Missing</th>
+            <th style="text-align:center">🔲 Unreviewed</th>
+          </tr>
+        </thead>
+        <tbody id="pm-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>iOS/Android tests shown for visibility only — filter to <strong>Web</strong> for in-scope KR tests.</div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <a href="https://trivago.atlassian.net/wiki/pages/4772791319" target="_blank">📄 Confluence data page</a>
+      <a href="#" id="change-creds-link">⚙ Change credentials</a>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Constants ──────────────────────────────────────────────────────────────
+const CONFLUENCE_BASE = 'https://trivago.atlassian.net';
+const PAGE_ID = '4772791319';
+const LS_KEY = 'ctest_tracker_q2_2026';
+
+const STATUS_MAP = {
+  '':          { label: '— not reviewed —',              cls: 'status-unreviewed' },
+  'confirmed': { label: '✅ Has iOS + Android deliverables', cls: 'status-confirmed' },
+  'partial':   { label: '⚠️ Partial – one platform only',   cls: 'status-partial'   },
+  'missing':   { label: '❌ Missing deliverables',           cls: 'status-missing'   },
+  'na':        { label: '➖ Not applicable',                 cls: 'status-na'        },
+};
+
+// Confluence stores human-readable strings; map them to/from internal keys
+const STATUS_TO_KEY = {
+  'Has iOS + Android deliverables': 'confirmed',
+  'Partial – one platform only':    'partial',
+  'Missing deliverables':           'missing',
+  'Not applicable':                 'na',
+};
+const KEY_TO_LABEL = {
+  confirmed: 'Has iOS + Android deliverables',
+  partial:   'Partial – one platform only',
+  missing:   'Missing deliverables',
+  na:        'Not applicable',
+};
+
+const TESTS = [
+  { id:"72121",  date:"2026-04-06", platform:"web",     label:"Hotel name searches – Skip price filter for searched accommodation", pm:"Hazal Sahin" },
+  { id:"72275",  date:"2026-04-07", platform:"web",     label:"Trinity CTR model in Triton", pm:"Fabian Woltermann" },
+  { id:"72227",  date:"2026-04-14", platform:"ios",     label:"Remove filter icons on apps – iOS", pm:"Van Do" },
+  { id:"72274",  date:"2026-04-14", platform:"web",     label:"Display distance to address on sort & location filter", pm:"Van Do" },
+  { id:"72044",  date:"2026-04-14", platform:"web",     label:"Allow POI and item search for AI simple search", pm:"Van Do" },
+  { id:"72296",  date:"2026-04-14", platform:"web",     label:"Hide search result for inappropriate queries", pm:"Van Do" },
+  { id:"72359",  date:"2026-04-15", platform:"web",     label:"Deal Cards: Adding CTA (V2 – chevron)", pm:"Dogucan Yenidunya" },
+  { id:"72267",  date:"2026-04-15", platform:"web",     label:"Update location component in the info slideout", pm:"Natalia Panshina" },
+  { id:"71772",  date:"2026-04-15", platform:"web",     label:"Add AI search query to Recently Viewed carousel on Homepage", pm:"Van Do" },
+  { id:"72375",  date:"2026-04-15", platform:"web",     label:"Homepage: Multi-tab Popular Destinations Carousel", pm:"Isinsu Ates" },
+  { id:"72350",  date:"2026-04-17", platform:"web",     label:"Auction CTR Model with Deal Features", pm:"Viktoria Semenova" },
+  { id:"72273",  date:"2026-04-20", platform:"web",     label:"Merge Minimalist and Trendy into Modern style filter", pm:"Van Do" },
+  { id:"72404",  date:"2026-04-21", platform:"web",     label:"Bringing Favourites to header for members – Desktop", pm:"Yomna Eid" },
+  { id:"72432",  date:"2026-04-21", platform:"web",     label:"Deal-Price-Context-Score in Ranking CTR", pm:"Bita Shams" },
+  { id:"72397",  date:"2026-04-24", platform:"web",     label:"SEO – Remove floating banner, introduce sticky entry point", pm:"Ritwik Kumar" },
+  { id:"72024",  date:"2026-04-24", platform:"web",     label:"Evaluate impact of number of questions on survey participation", pm:"Sibilla Silbano" },
+  { id:"72465",  date:"2026-04-28", platform:"web",     label:"JP – View Deal CTA copy translation change", pm:"Hazal Sahin" },
+  { id:"72407",  date:"2026-04-29", platform:"ios",     label:"Grouping deals by advertiser on Prices Tab", pm:"Hazal Sahin" },
+  { id:"72367",  date:"2026-05-04", platform:"web",     label:"SEO – Add comparison module on OAR pages", pm:"Ritwik Kumar" },
+  { id:"72447",  date:"2026-05-04", platform:"web",     label:"Chains Subscription Pilot V2 – visibility & flow update", pm:"Hazal Sahin" },
+  { id:"72484",  date:"2026-05-06", platform:"web",     label:"Relevant partners test 2nd ITR – all prices from partners", pm:"Hazal Sahin" },
+  { id:"72298",  date:"2026-05-07", platform:"web",     label:"Automatically update filter menu when filters derived from AI query", pm:"Van Do" },
+  { id:"72443",  date:"2026-05-07", platform:"web",     label:"Hotel Highlights – Ratings-based & Context-aware ranking V1", pm:"Agata Abram" },
+  { id:"72473",  date:"2026-05-07", platform:"web",     label:"Bring new popular filters to refinement row", pm:"Van Do" },
+  { id:"72407w", date:"2026-05-08", platform:"web",     label:"Change item card height on mobile", pm:"Natalia Panshina" },
+  { id:"72197",  date:"2026-05-12", platform:"web",     label:"Loyalty Deal Badge UI Simplification (Inline with Advertiser)", pm:"Anant Gupta" },
+  { id:"72371",  date:"2026-05-12", platform:"web",     label:"User profiling survey completion screen", pm:"Sibilla Silbano" },
+  { id:"72332",  date:"2026-05-13", platform:"web",     label:"Prioritise main image corresponding to AI search derived concepts", pm:"Van Do" },
+  { id:"72429",  date:"2026-05-13", platform:"web",     label:"RegionSearch ItemCard deal count from 5 to 3", pm:"Klaus Kientzle" },
+  { id:"72260",  date:"2026-05-15", platform:"web",     label:"Mobile & App Exclusive Rates – Quality Filter for badge visibility", pm:"Hazal Sahin" },
+  { id:"72455",  date:"2026-05-21", platform:"web",     label:"AI Review Summaries: per-paragraph generation + optimised opening & bolding", pm:"Agata Abram" },
+  { id:"72451",  date:"2026-05-26", platform:"web",     label:"Unfenced Loyalty Deals from Hotelchains", pm:"Bunyamin Aksakal" },
+  { id:"72452",  date:"2026-05-26", platform:"web",     label:"Auction CTR: Continuous Retraining", pm:"Anant Gupta" },
+  { id:"72370",  date:"2026-05-27", platform:"ios",     label:"Non-dismissible login flyout – iOS fencing (strategic)", pm:"Daniel Roux" },
+  { id:"72235",  date:"2026-05-27", platform:"android", label:"Non-dismissible login flyout – Android fencing (strategic)", pm:"Daniel Roux" },
+  { id:"72304",  date:"2026-05-28", platform:"web",     label:"Optimising Pre-Warm Search – Enhanced Guest Selection", pm:"Francesco Lenahan" },
+  { id:"72030",  date:"2026-05-29", platform:"web",     label:"Better-than-Brand (Deal Flag) – Android", pm:"Anant Gupta" },
+  { id:"72164",  date:"2026-06-02", platform:"web",     label:"EMOP Fencing with Member Rates Support", pm:"Alexander Fischer" },
+  { id:"72279",  date:"2026-06-08", platform:"web",     label:"Social login in App login entry points – Android", pm:"Irene George" },
+  { id:"72268",  date:"2026-06-09", platform:"web",     label:"SSD Eligibility Improvement – Iteration 3", pm:"Anant Gupta" },
+  { id:"72483",  date:"2026-06-09", platform:"web",     label:"Filter sidebar with auto filter application upon selection", pm:"Van Do" },
+  { id:"72366",  date:"2026-06-11", platform:"android", label:"Trinity: Deal Card UI parity & DBR Comms – Android", pm:"Hazal Sahin" },
+  { id:"72523",  date:"2026-06-11", platform:"web",     label:"Introduce SV expansion to dateless", pm:"Natalia Panshina" },
+];
+
+// ── State ──────────────────────────────────────────────────────────────────
+let statuses = {};         // id → '' | 'confirmed' | 'partial' | 'missing' | 'na'
+let confluenceVersion = null;
+let saveDebounceTimer = null;
+let activeTab = 'by-test';
+let filterPlatform = 'all';
+let filterMonth = 'all';
+let filterSearch = '';
+
+// ── Auth helpers ───────────────────────────────────────────────────────────
+function getAuth() {
+  const email = sessionStorage.getItem('conf_email');
+  const token = sessionStorage.getItem('conf_token');
+  if (!email || !token) return null;
+  return 'Basic ' + btoa(email + ':' + token);
+}
+
+function showAuthModal() {
+  document.getElementById('auth-overlay').classList.remove('hidden');
+  document.getElementById('auth-email').value = sessionStorage.getItem('conf_email') || '';
+  document.getElementById('auth-token').value = '';
+  document.getElementById('auth-email').focus();
+}
+
+function hideAuthModal() {
+  document.getElementById('auth-overlay').classList.add('hidden');
+}
+
+document.getElementById('auth-submit').addEventListener('click', () => {
+  const email = document.getElementById('auth-email').value.trim();
+  const token = document.getElementById('auth-token').value.trim();
+  const errEl = document.getElementById('auth-error');
+  if (!email || !token) { errEl.style.display = 'block'; return; }
+  errEl.style.display = 'none';
+  sessionStorage.setItem('conf_email', email);
+  sessionStorage.setItem('conf_token', token);
+  hideAuthModal();
+  loadFromConfluence();
+});
+
+document.getElementById('auth-email').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('auth-token').focus();
+});
+document.getElementById('auth-token').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('auth-submit').click();
+});
+
+document.getElementById('change-creds-link').addEventListener('click', e => {
+  e.preventDefault();
+  showAuthModal();
+});
+
+// ── localStorage ────────────────────────────────────────────────────────────
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(statuses)); } catch(e) {}
+}
+
+function loadLocal() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) statuses = JSON.parse(raw);
+  } catch(e) {}
+}
+
+// ── Confluence API ──────────────────────────────────────────────────────────
+function buildPageBody(data) {
+  const json = JSON.stringify(data, null, 2);
+  // Escape for XHTML storage format
+  const escaped = json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return `<p>C-Test KR Tracker data store. Do not edit manually.</p><pre><code>${escaped}</code></pre>`;
+}
+
+async function loadFromConfluence() {
+  showSpinner();
+  const auth = getAuth();
+  if (!auth) {
+    hideSpinner();
+    showAuthModal();
+    return;
+  }
+
+  try {
+    const resp = await fetch(
+      `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}?body-format=storage`,
+      { headers: { 'Authorization': auth, 'Accept': 'application/json' } }
+    );
+
+    if (resp.status === 401) {
+      hideSpinner();
+      showAuthModal();
+      return;
+    }
+
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+    const data = await resp.json();
+    confluenceVersion = data.version.number;
+
+    // Extract JSON from <pre><code>…</code></pre>
+    const bodyStorage = data.body?.storage?.value || '';
+    const match = bodyStorage.match(/<code[^>]*>([\s\S]*?)<\/code>/i);
+    if (match) {
+      const raw = match[1]
+        .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'");
+      try {
+        const parsed = JSON.parse(raw.trim());
+        // Convert stored labels back to internal keys
+        const converted = {};
+        for (const [id, val] of Object.entries(parsed)) {
+          converted[id] = STATUS_TO_KEY[val] || val || '';
+        }
+        statuses = converted;
+        saveLocal();
+      } catch(e) {
+        loadLocal();
+      }
+    } else {
+      loadLocal();
+    }
+  } catch(e) {
+    console.warn('Confluence load failed, using localStorage:', e);
+    loadLocal();
+  }
+
+  hideSpinner();
+  renderAll();
+}
+
+async function saveToConfluence() {
+  const auth = getAuth();
+  if (!auth) return;
+
+  setPillState('saving');
+
+  // Convert internal keys to human-readable labels for storage
+  const toStore = {};
+  for (const [id, key] of Object.entries(statuses)) {
+    if (key) toStore[id] = KEY_TO_LABEL[key] || key;
+  }
+
+  try {
+    // Get current version if we don't have it
+    if (confluenceVersion === null) {
+      const vResp = await fetch(
+        `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`,
+        { headers: { 'Authorization': auth, 'Accept': 'application/json' } }
+      );
+      if (!vResp.ok) throw new Error(`HTTP ${vResp.status}`);
+      const vData = await vResp.json();
+      confluenceVersion = vData.version.number;
+    }
+
+    const newVersion = confluenceVersion + 1;
+
+    const body = {
+      id: PAGE_ID,
+      status: 'current',
+      title: 'C-Test KR Tracker Q2 2026 – Data Store [DO NOT EDIT MANUALLY]',
+      body: {
+        representation: 'storage',
+        value: buildPageBody(toStore),
+      },
+      version: { number: newVersion },
+    };
+
+    const resp = await fetch(
+      `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': auth,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    if (!resp.ok) {
+      const errText = await resp.text();
+      // Version conflict: re-fetch version and retry once
+      if (resp.status === 409) {
+        confluenceVersion = null;
+        await saveToConfluence();
+        return;
+      }
+      throw new Error(`HTTP ${resp.status}: ${errText}`);
+    }
+
+    const saved = await resp.json();
+    confluenceVersion = saved.version.number;
+    setPillState('saved');
+    setTimeout(() => setPillState('synced'), 3000);
+
+  } catch(e) {
+    console.error('Confluence save failed:', e);
+    setPillState('failed');
+    setTimeout(() => setPillState('synced'), 5000);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveDebounceTimer);
+  setPillState('saving');
+  saveDebounceTimer = setTimeout(() => saveToConfluence(), 1000);
+}
+
+// ── Pill state ──────────────────────────────────────────────────────────────
+function setPillState(state) {
+  const pill = document.getElementById('save-pill');
+  pill.className = 'save-pill ' + state;
+  const labels = {
+    synced:  'Synced',
+    saving:  'Saving to Confluence…',
+    saved:   '✓ Saved – visible to all',
+    failed:  '⚠ Save failed – cached locally',
+  };
+  pill.textContent = labels[state] || state;
+}
+
+// ── Spinner ─────────────────────────────────────────────────────────────────
+function showSpinner() { document.getElementById('spinner-overlay').classList.remove('hidden'); }
+function hideSpinner() {
+  document.getElementById('spinner-overlay').classList.add('hidden');
+  document.getElementById('main-content').style.display = 'block';
+}
+
+// ── Derived data ─────────────────────────────────────────────────────────────
+function webTests() { return TESTS.filter(t => t.platform === 'web'); }
+
+function getKPIs() {
+  const web = webTests();
+  const total = web.length;
+  let confirmed = 0, partial = 0, missing = 0, na = 0, unreviewed = 0;
+  for (const t of web) {
+    const s = statuses[t.id] || '';
+    if (s === 'confirmed') confirmed++;
+    else if (s === 'partial') partial++;
+    else if (s === 'missing') missing++;
+    else if (s === 'na') na++;
+    else unreviewed++;
+  }
+  const eligible = total - na;
+  const pct = eligible > 0 ? Math.round((confirmed / eligible) * 100) : 0;
+  return { total, confirmed, partial, missing, na, unreviewed, eligible, pct };
+}
+
+// ── Render KPIs ──────────────────────────────────────────────────────────────
+function renderKPIs() {
+  const k = getKPIs();
+  document.getElementById('kpi-total').textContent = k.total;
+  document.getElementById('kpi-confirmed').textContent = k.confirmed;
+  document.getElementById('kpi-missing').textContent = k.missing + k.partial;
+  document.getElementById('kpi-pct').textContent = k.pct + '%';
+
+  const t = k.total || 1;
+  document.getElementById('bar-confirmed').style.width = (k.confirmed / t * 100) + '%';
+  document.getElementById('bar-partial').style.width   = (k.partial   / t * 100) + '%';
+  document.getElementById('bar-missing').style.width   = (k.missing   / t * 100) + '%';
+  document.getElementById('bar-na').style.width        = (k.na        / t * 100) + '%';
+
+  document.getElementById('leg-confirmed').textContent  = k.confirmed  + ' confirmed';
+  document.getElementById('leg-partial').textContent    = k.partial    + ' partial';
+  document.getElementById('leg-missing').textContent    = k.missing    + ' missing';
+  document.getElementById('leg-na').textContent         = k.na         + ' N/A';
+  document.getElementById('leg-unreviewed').textContent = k.unreviewed + ' unreviewed';
+}
+
+// ── Render test table ─────────────────────────────────────────────────────────
+function filteredTests() {
+  const q = filterSearch.toLowerCase();
+  return TESTS.filter(t => {
+    if (filterPlatform !== 'all' && t.platform !== filterPlatform) return false;
+    const month = new Date(t.date).toLocaleString('en-US', { month: 'short' });
+    if (filterMonth !== 'all' && month !== filterMonth) return false;
+    if (q && !t.id.toLowerCase().includes(q) && !t.label.toLowerCase().includes(q) && !t.pm.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
+}
+
+function numericId(id) { return id.replace(/\D/g, ''); }
+
+function renderTestTable() {
+  const tbody = document.getElementById('test-tbody');
+  const tests = filteredTests();
+
+  if (tests.length === 0) {
+    tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No tests match the current filters.</td></tr>';
+    return;
+  }
+
+  // Group by month
+  const groups = {};
+  for (const t of tests) {
+    const month = new Date(t.date).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    if (!groups[month]) groups[month] = [];
+    groups[month].push(t);
+  }
+
+  let html = '';
+  for (const [month, group] of Object.entries(groups)) {
+    html += `<tr class="month-group-row"><td colspan="6">${month}</td></tr>`;
+    for (const t of group) {
+      const status = statuses[t.id] || '';
+      const sm = STATUS_MAP[status];
+      const nid = numericId(t.id);
+      const ctestUrl = `https://ctest.admin.trv.cloud/ctest/${nid}`;
+      html += `
+        <tr>
+          <td class="test-id"><a href="${ctestUrl}" target="_blank">${t.id}</a></td>
+          <td><span class="platform-badge platform-${t.platform}">${t.platform}</span></td>
+          <td class="date-cell">${formatDate(t.date)}</td>
+          <td class="pm-cell">${escHtml(t.pm)}</td>
+          <td class="test-name">${escHtml(t.label)}</td>
+          <td>
+            <select class="status-select ${sm.cls}" data-id="${t.id}" onchange="onStatusChange(this)">
+              ${Object.entries(STATUS_MAP).map(([val, info]) =>
+                `<option value="${val}"${status === val ? ' selected' : ''}>${info.label}</option>`
+              ).join('')}
+            </select>
+          </td>
+        </tr>`;
+    }
+  }
+  tbody.innerHTML = html;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── On status change (in-place, no re-render) ─────────────────────────────────
+function onStatusChange(sel) {
+  const id = sel.dataset.id;
+  const val = sel.value;
+  statuses[id] = val;
+  saveLocal();
+
+  // Update only this select's styles
+  const sm = STATUS_MAP[val];
+  sel.className = 'status-select ' + sm.cls;
+
+  renderKPIs();
+  if (activeTab === 'by-pm') renderPMTable();
+  scheduleSave();
+}
+
+// ── Render PM table ─────────────────────────────────────────────────────────
+function renderPMTable() {
+  const web = webTests();
+  const pmMap = {};
+  for (const t of web) {
+    if (!pmMap[t.pm]) pmMap[t.pm] = { confirmed:0, partial:0, missing:0, unreviewed:0, total:0 };
+    pmMap[t.pm].total++;
+    const s = statuses[t.id] || '';
+    if (s === 'confirmed') pmMap[t.pm].confirmed++;
+    else if (s === 'partial') pmMap[t.pm].partial++;
+    else if (s === 'missing') pmMap[t.pm].missing++;
+    else pmMap[t.pm].unreviewed++;
+  }
+
+  const sorted = Object.entries(pmMap).sort((a,b) => b[1].total - a[1].total);
+  const tbody = document.getElementById('pm-tbody');
+  tbody.innerHTML = sorted.map(([pm, d]) => `
+    <tr>
+      <td style="font-weight:500">${escHtml(pm)}</td>
+      <td style="text-align:center">${d.total}</td>
+      <td style="text-align:center" class="pm-confirmed">${d.confirmed || '–'}</td>
+      <td style="text-align:center" class="pm-partial">${d.partial || '–'}</td>
+      <td style="text-align:center" class="pm-missing">${d.missing || '–'}</td>
+      <td style="text-align:center" class="pm-unreviewed">${d.unreviewed || '–'}</td>
+    </tr>
+  `).join('');
+}
+
+// ── Full render ───────────────────────────────────────────────────────────────
+function renderAll() {
+  renderKPIs();
+  renderTestTable();
+  renderPMTable();
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    activeTab = btn.dataset.tab;
+    document.getElementById('tab-' + activeTab).classList.add('active');
+    if (activeTab === 'by-pm') renderPMTable();
+  });
+});
+
+// ── Platform pills ────────────────────────────────────────────────────────────
+document.getElementById('platform-pills').addEventListener('click', e => {
+  if (!e.target.dataset.platform) return;
+  document.querySelectorAll('#platform-pills .pill').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  filterPlatform = e.target.dataset.platform;
+  renderTestTable();
+});
+
+// ── Month pills ───────────────────────────────────────────────────────────────
+document.getElementById('month-pills').addEventListener('click', e => {
+  if (!e.target.dataset.month) return;
+  document.querySelectorAll('#month-pills .pill').forEach(p => p.classList.remove('active'));
+  e.target.classList.add('active');
+  filterMonth = e.target.dataset.month;
+  renderTestTable();
+});
+
+// ── Search ────────────────────────────────────────────────────────────────────
+document.getElementById('search-input').addEventListener('input', e => {
+  filterSearch = e.target.value;
+  renderTestTable();
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+(function init() {
+  if (!getAuth()) {
+    hideSpinner();
+    showAuthModal();
+    // When auth modal is filled, loadFromConfluence is called
+  } else {
+    loadFromConfluence();
+  }
+})();
+</script>
+</body>
+</html>
