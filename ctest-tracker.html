@@ -421,7 +421,7 @@ const SS_PREFIX = 'ctest_oauth_';
 // Redirect URI = this page's URL (strip query/hash)
 const REDIRECT_URI = location.origin + location.pathname;
 
-const SCOPES = 'read:confluence-content.all write:confluence-content offline_access';
+const SCOPES = 'read:page:confluence write:page:confluence offline_access';
 const AUTH_URL   = 'https://auth.atlassian.com/authorize';
 const TOKEN_URL  = 'https://auth.atlassian.com/oauth/token';
 const API_BASE   = `https://api.atlassian.com/ex/confluence/${CLOUD_ID}`;
