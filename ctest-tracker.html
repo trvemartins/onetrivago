@@ -34,50 +34,6 @@
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner-text { color: #6B7280; font-size: 14px; }
 
-  /* ── Sign-in screen ── */
-  #signin-screen {
-    position: fixed; inset: 0; background: #F8F9FB;
-    display: flex; align-items: center; justify-content: center;
-    z-index: 9997;
-  }
-  #signin-screen.hidden { display: none; }
-  .signin-card {
-    background: #fff; border: 1px solid #E5E7EB; border-radius: 16px;
-    padding: 40px 44px; width: 400px; max-width: 95vw;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
-    display: flex; flex-direction: column; align-items: center; text-align: center;
-  }
-  .signin-logo {
-    width: 48px; height: 48px; margin-bottom: 20px;
-  }
-  .signin-card h1 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 8px; }
-  .signin-card p  { font-size: 13px; color: #6B7280; line-height: 1.6; margin-bottom: 28px; }
-  .btn-atlassian {
-    display: flex; align-items: center; justify-content: center; gap: 10px;
-    width: 100%; padding: 12px 20px;
-    background: #0052CC; color: #fff;
-    border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
-    cursor: pointer; font-family: inherit; transition: background 0.15s;
-    text-decoration: none;
-  }
-  .btn-atlassian:hover { background: #0747A6; }
-  .signin-note { margin-top: 16px; font-size: 11px; color: #9CA3AF; }
-  .signin-error {
-    margin-top: 16px; padding: 10px 14px; background: #FEF2F2; border: 1px solid #FECACA;
-    border-radius: 8px; color: #991B1B; font-size: 12px; display: none; width: 100%;
-    text-align: left;
-  }
-  .signin-setup {
-    margin-top: 20px; font-size: 11px; color: #9CA3AF; line-height: 1.6;
-    background: #F9FAFB; border-radius: 8px; padding: 12px; width: 100%;
-    text-align: left; display: none;
-  }
-  .signin-setup code {
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    background: #E5E7EB; padding: 1px 5px; border-radius: 3px; font-size: 11px;
-    word-break: break-all;
-  }
-
   /* ── Layout ── */
   .page-wrap { max-width: 980px; margin: 0 auto; padding: 24px 20px 60px; }
 
@@ -87,30 +43,17 @@
     margin-bottom: 24px; gap: 12px;
   }
   .header-left h1 { font-size: 20px; font-weight: 700; color: #111827; }
-  .header-left p { font-size: 12px; color: #6B7280; margin-top: 2px; }
-  .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .header-left p  { font-size: 12px; color: #6B7280; margin-top: 2px; }
 
   /* ── Save pill ── */
   .save-pill {
     font-size: 11px; font-weight: 500; padding: 5px 11px; border-radius: 20px;
-    white-space: nowrap; transition: all 0.2s;
+    white-space: nowrap; transition: all 0.2s; margin-top: 4px;
   }
-  .save-pill.synced  { background: #F3F4F6; color: #6B7280; }
-  .save-pill.saving  { background: #EEF2FF; color: #4338CA; }
-  .save-pill.saved   { background: #D1FAE5; color: #065F46; }
-  .save-pill.failed  { background: #FEE2E2; color: #991B1B; }
-
-  /* ── User badge ── */
-  .user-badge {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 11px; color: #6B7280;
-  }
-  .user-avatar {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: #6366F1; color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 10px; font-weight: 600; flex-shrink: 0;
-  }
+  .save-pill.synced { background: #F3F4F6; color: #6B7280; }
+  .save-pill.saving { background: #EEF2FF; color: #4338CA; }
+  .save-pill.saved  { background: #D1FAE5; color: #065F46; }
+  .save-pill.failed { background: #FEE2E2; color: #991B1B; }
 
   /* ── KPI cards ── */
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -129,8 +72,8 @@
   }
   .progress-label { font-size: 12px; font-weight: 500; margin-bottom: 8px; color: #374151; }
   .progress-track {
-    height: 10px; background: #F3F4F6; border-radius: 999px; overflow: hidden; margin-bottom: 10px;
-    display: flex;
+    height: 10px; background: #F3F4F6; border-radius: 999px; overflow: hidden;
+    margin-bottom: 10px; display: flex;
   }
   .progress-fill-confirmed { background: #059669; height: 100%; transition: width 0.4s; }
   .progress-fill-partial   { background: #D97706; height: 100%; transition: width 0.4s; }
@@ -138,7 +81,7 @@
   .progress-fill-na        { background: #9CA3AF; height: 100%; transition: width 0.4s; }
   .progress-legend { display: flex; gap: 16px; flex-wrap: wrap; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #4B5563; }
-  .legend-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
   /* ── Tabs ── */
   .tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #E5E7EB; }
@@ -211,14 +154,13 @@
     min-width: 220px; transition: all 0.15s; background: #fff;
   }
   .status-select:focus { box-shadow: 0 0 0 3px rgba(99,102,241,0.15); }
-
   .status-unreviewed { border-color: #D1D5DB; color: #9CA3AF; }
   .status-confirmed  { border-color: #059669; color: #059669; background: #F0FDF4; }
   .status-partial    { border-color: #D97706; color: #D97706; background: #FFFBEB; }
   .status-missing    { border-color: #DC2626; color: #DC2626; background: #FEF2F2; }
   .status-na         { border-color: #D1D5DB; color: #6B7280; background: #F9FAFB; }
 
-  /* ── PM tab table ── */
+  /* ── PM tab ── */
   .pm-table-wrap { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; }
   .pm-confirmed  { color: #059669; font-weight: 600; }
   .pm-partial    { color: #D97706; font-weight: 600; }
@@ -244,34 +186,7 @@
 <!-- Spinner -->
 <div id="spinner-overlay">
   <div class="spinner"></div>
-  <p class="spinner-text" id="spinner-text">Loading…</p>
-</div>
-
-<!-- Sign-in screen -->
-<div id="signin-screen" class="hidden">
-  <div class="signin-card">
-    <!-- Atlassian wordmark as inline SVG -->
-    <svg class="signin-logo" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <rect width="48" height="48" rx="10" fill="#0052CC"/>
-      <path d="M22.3 22.1c-.3-.4-.9-.4-1.2 0L14 33.5c-.2.3 0 .7.4.7h7.8c.2 0 .4-.1.5-.3 1.8-3.4 1.4-8.7-.4-11.8z" fill="url(#a)"/>
-      <path d="M24 13c-3.2 5.3-3 11.8-.1 17.1l3.8 7c.1.2.3.3.5.3h7.8c.4 0 .6-.4.4-.7L25.2 13c-.3-.4-.9-.4-1.2 0z" fill="white"/>
-      <defs>
-        <linearGradient id="a" x1="22.8" y1="26.7" x2="16.4" y2="34.5" gradientUnits="userSpaceOnUse">
-          <stop stop-color="white" stop-opacity=".4"/>
-          <stop offset="1" stop-color="white"/>
-        </linearGradient>
-      </defs>
-    </svg>
-    <h1>C-Test Acceptance Tracker</h1>
-    <p>Sign in with your Atlassian account to load and save shared review statuses. Your Trivago SSO will handle authentication automatically.</p>
-    <button class="btn-atlassian" id="signin-btn">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z" fill="white"/></svg>
-      Sign in with Atlassian
-    </button>
-    <p class="signin-note">You'll be redirected to Atlassian and back automatically.</p>
-    <div class="signin-error" id="signin-error"></div>
-    <div class="signin-setup" id="signin-setup"></div>
-  </div>
+  <p class="spinner-text">Loading shared statuses…</p>
 </div>
 
 <!-- Main content -->
@@ -282,16 +197,9 @@
       <h1>C-Test Acceptance Tracker</h1>
       <p>KR Audit &nbsp;·&nbsp; Q2 2026 &nbsp;·&nbsp; Apr 1 – Jun 12</p>
     </div>
-    <div class="header-right">
-      <div class="save-pill synced" id="save-pill">Synced</div>
-      <div class="user-badge" id="user-badge" style="display:none">
-        <div class="user-avatar" id="user-avatar">?</div>
-        <span id="user-name"></span>
-      </div>
-    </div>
+    <div class="save-pill synced" id="save-pill">Synced</div>
   </div>
 
-  <!-- KPI cards -->
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">Total web tests</div>
@@ -315,7 +223,6 @@
     </div>
   </div>
 
-  <!-- Progress bar -->
   <div class="progress-card">
     <div class="progress-label">Deliverable coverage — web tests only</div>
     <div class="progress-track">
@@ -333,13 +240,11 @@
     </div>
   </div>
 
-  <!-- Tabs -->
   <div class="tabs">
     <button class="tab-btn active" data-tab="by-test">📋 By test</button>
     <button class="tab-btn" data-tab="by-pm">👤 By PM</button>
   </div>
 
-  <!-- By test tab -->
   <div class="tab-panel active" id="tab-by-test">
     <div class="filters">
       <input type="text" class="search-box" id="search-input" placeholder="Search by ID, name or PM…">
@@ -373,7 +278,6 @@
     </div>
   </div>
 
-  <!-- By PM tab -->
   <div class="tab-panel" id="tab-by-pm">
     <div class="pm-table-wrap">
       <table>
@@ -392,41 +296,26 @@
     </div>
   </div>
 
-  <!-- Footer -->
   <div class="footer">
     <div>iOS/Android tests shown for visibility only — filter to <strong>Web</strong> for in-scope KR tests.</div>
-    <div style="display:flex;gap:16px;flex-wrap:wrap">
-      <a href="https://trivago.atlassian.net/wiki/pages/4772791319" target="_blank">📄 Confluence data page</a>
-      <a href="#" id="signout-link">Sign out</a>
-    </div>
+    <a href="https://trivago.atlassian.net/wiki/pages/4772791319" target="_blank">📄 Confluence data page</a>
   </div>
 
 </div>
 
 <script>
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// CONFIGURATION — fill in CLIENT_ID after registering your OAuth app at
-// https://developer.atlassian.com/console/myapps/
-// App type: OAuth 2.0 (3LO)
-// Scopes: read:confluence-content.all  write:confluence-content  offline_access
-// Callback URL: the URL where this file is hosted (see REDIRECT_URI below)
+// CONFIGURATION
+// Generate your API token at: https://id.atlassian.com/manage-api-tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const CLIENT_ID = 'M3cSsKSmbJ5uj9oD2qyNlP4JsBOrl7Nt';
+const CONF_EMAIL = 'emilio.martins@trivago.com';
+const CONF_TOKEN = 'ATATT3xFfGF0VJq3g0ZHXHrj0xdMw7Tn_LN1cdrNqKi2fWWDdNrLDF2QytX6BybVtfCbPX2JlVyU6DL0YPvnfEE0Kz0iry_VG2V_qFgRdOLVDz_SJ1cK39CjyfkhRV55KO3bnFn3ymy9KlzMQp96qLAvtKNC-6wq4-CX8POxhkO766Dbxy5UBeE=7BFC4DE3';
 
-const CLOUD_ID  = 'c1d8debe-4d98-460f-81b3-caee34642ac8';
-const PAGE_ID   = '4772791319';
-const LS_KEY    = 'ctest_tracker_q2_2026';
-const SS_PREFIX = 'ctest_oauth_';
+const CONFLUENCE_BASE = 'https://trivago.atlassian.net';
+const PAGE_ID = '4772791319';
+const LS_KEY  = 'ctest_tracker_q2_2026';
 
-// Redirect URI = this page's URL (strip query/hash)
-const REDIRECT_URI = location.origin + location.pathname;
-
-const SCOPES = 'read:page:confluence write:page:confluence offline_access';
-const AUTH_URL   = 'https://auth.atlassian.com/authorize';
-const TOKEN_URL  = 'https://auth.atlassian.com/oauth/token';
-const API_BASE   = `https://api.atlassian.com/ex/confluence/${CLOUD_ID}`;
-
-// ── Status maps ─────────────────────────────────────────────────────────────
+// ── Status maps ──────────────────────────────────────────────────────────────
 const STATUS_MAP = {
   '':          { label: '— not reviewed —',                 cls: 'status-unreviewed' },
   'confirmed': { label: '✅ Has iOS + Android deliverables', cls: 'status-confirmed'  },
@@ -503,245 +392,39 @@ let filterPlatform = 'all';
 let filterMonth = 'all';
 let filterSearch = '';
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// OAuth 2.0 PKCE helpers
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function randomBase64url(len) {
-  const arr = new Uint8Array(len);
-  crypto.getRandomValues(arr);
-  return btoa(String.fromCharCode(...arr))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+// ── Auth header ───────────────────────────────────────────────────────────────
+function authHeader() {
+  return 'Basic ' + btoa(CONF_EMAIL + ':' + CONF_TOKEN);
 }
 
-async function sha256Base64url(str) {
-  const data = new TextEncoder().encode(str);
-  const digest = await crypto.subtle.digest('SHA-256', data);
-  return btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+// ── localStorage ──────────────────────────────────────────────────────────────
+function saveLocal() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(statuses)); } catch {}
+}
+function loadLocal() {
+  try { const r = localStorage.getItem(LS_KEY); if (r) statuses = JSON.parse(r); } catch {}
 }
 
-function ssGet(k)       { return sessionStorage.getItem(SS_PREFIX + k); }
-function ssSet(k, v)    { sessionStorage.setItem(SS_PREFIX + k, v); }
-function ssDel(k)       { sessionStorage.removeItem(SS_PREFIX + k); }
-
-function getAccessToken()  { return ssGet('access_token'); }
-function getRefreshToken() { return ssGet('refresh_token'); }
-
-function clearTokens() {
-  ['access_token','refresh_token','expires_at'].forEach(k => ssDel(k));
-}
-
-function storeTokens(data) {
-  ssSet('access_token',  data.access_token);
-  if (data.refresh_token) ssSet('refresh_token', data.refresh_token);
-  if (data.expires_in)    ssSet('expires_at', Date.now() + data.expires_in * 1000 - 30000);
-}
-
-function isTokenExpired() {
-  const exp = ssGet('expires_at');
-  return exp ? Date.now() > parseInt(exp, 10) : false;
-}
-
-async function refreshAccessToken() {
-  const refresh = getRefreshToken();
-  if (!refresh) return false;
-  try {
-    const resp = await fetch(TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type:    'refresh_token',
-        client_id:     CLIENT_ID,
-        refresh_token: refresh,
-      }),
-    });
-    if (!resp.ok) return false;
-    storeTokens(await resp.json());
-    return true;
-  } catch { return false; }
-}
-
-async function getValidToken() {
-  if (isTokenExpired()) {
-    const ok = await refreshAccessToken();
-    if (!ok) return null;
-  }
-  return getAccessToken();
-}
-
-// ── Sign-in flow ─────────────────────────────────────────────────────────────
-
-function isClientIdConfigured() {
-  return CLIENT_ID && CLIENT_ID !== 'YOUR_CLIENT_ID_HERE';
-}
-
-async function startSignIn() {
-  const verifier  = randomBase64url(64);
-  const challenge = await sha256Base64url(verifier);
-  const state     = randomBase64url(16);
-
-  ssSet('pkce_verifier', verifier);
-  ssSet('oauth_state',   state);
-
-  const params = new URLSearchParams({
-    audience:              'api.atlassian.com',
-    client_id:             CLIENT_ID,
-    scope:                 SCOPES,
-    redirect_uri:          REDIRECT_URI,
-    state,
-    response_type:         'code',
-    code_challenge:        challenge,
-    code_challenge_method: 'S256',
-    prompt:                'consent',
-  });
-
-  location.href = `${AUTH_URL}?${params}`;
-}
-
-async function handleOAuthCallback(code, returnedState) {
-  setSpinnerText('Completing sign-in…');
-  showSpinner();
-
-  const expectedState = ssGet('oauth_state');
-  const verifier      = ssGet('pkce_verifier');
-  ssDel('oauth_state');
-  ssDel('pkce_verifier');
-
-  // Clean code+state from URL without reload
-  const clean = location.origin + location.pathname;
-  history.replaceState({}, '', clean);
-
-  if (returnedState !== expectedState) {
-    hideSpinner();
-    showSignIn('State mismatch — possible CSRF. Please try signing in again.');
-    return;
-  }
-
-  try {
-    const resp = await fetch(TOKEN_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type:    'authorization_code',
-        client_id:     CLIENT_ID,
-        code,
-        redirect_uri:  REDIRECT_URI,
-        code_verifier: verifier,
-      }),
-    });
-
-    if (!resp.ok) {
-      const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error_description || `HTTP ${resp.status}`);
-    }
-
-    storeTokens(await resp.json());
-    await loadFromConfluence();
-  } catch(e) {
-    hideSpinner();
-    showSignIn(`Sign-in failed: ${e.message}`);
-  }
-}
-
-// ── Sign-in screen helpers ────────────────────────────────────────────────────
-
-function showSignIn(errorMsg) {
-  document.getElementById('signin-screen').classList.remove('hidden');
-  document.getElementById('main-content').style.display = 'none';
-
-  const errEl = document.getElementById('signin-error');
-  if (errorMsg) {
-    errEl.textContent = errorMsg;
-    errEl.style.display = 'block';
-  } else {
-    errEl.style.display = 'none';
-  }
-
-  if (!isClientIdConfigured()) {
-    const setup = document.getElementById('signin-setup');
-    setup.style.display = 'block';
-    setup.innerHTML = `
-      <strong>Setup required</strong><br>
-      Register an OAuth 2.0 app at
-      <a href="https://developer.atlassian.com/console/myapps/" target="_blank" style="color:#6366F1">developer.atlassian.com</a>
-      then paste the Client ID into <code>CLIENT_ID</code> at the top of this file.<br><br>
-      <strong>Callback URL to register:</strong><br>
-      <code>${escHtml(REDIRECT_URI)}</code><br><br>
-      <strong>Scopes:</strong>
-      <code>read:confluence-content.all</code>
-      <code>write:confluence-content</code>
-      <code>offline_access</code>
-    `;
-    document.getElementById('signin-btn').disabled = true;
-    document.getElementById('signin-btn').style.opacity = '0.5';
-    document.getElementById('signin-btn').style.cursor = 'not-allowed';
-  }
-}
-
-function hideSignIn() {
-  document.getElementById('signin-screen').classList.add('hidden');
-}
-
-// ── Sign-out ──────────────────────────────────────────────────────────────────
-
-document.getElementById('signout-link').addEventListener('click', e => {
-  e.preventDefault();
-  clearTokens();
-  document.getElementById('main-content').style.display = 'none';
-  showSignIn();
-});
-
-// ── Spinner ───────────────────────────────────────────────────────────────────
-
-function setSpinnerText(t) { document.getElementById('spinner-text').textContent = t; }
-function showSpinner()     { document.getElementById('spinner-overlay').classList.remove('hidden'); }
-function hideSpinner()     {
-  document.getElementById('spinner-overlay').classList.add('hidden');
-  document.getElementById('main-content').style.display = 'block';
-}
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Confluence API
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-async function cfFetch(path, opts = {}) {
-  const token = await getValidToken();
-  if (!token) throw Object.assign(new Error('Not authenticated'), { status: 401 });
-
-  const resp = await fetch(`${API_BASE}${path}`, {
-    ...opts,
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Accept':        'application/json',
-      ...(opts.headers || {}),
-    },
-  });
-
-  if (resp.status === 401) throw Object.assign(new Error('Unauthorized'), { status: 401 });
-  return resp;
-}
-
+// ── Confluence API ────────────────────────────────────────────────────────────
 function buildPageBody(data) {
-  const json    = JSON.stringify(data, null, 2);
-  const escaped = json.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const escaped = JSON.stringify(data, null, 2)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   return `<p>C-Test KR Tracker data store. Do not edit manually.</p><pre><code>${escaped}</code></pre>`;
 }
 
 async function loadFromConfluence() {
-  setSpinnerText('Loading shared statuses…');
   showSpinner();
-
   try {
-    const resp = await cfFetch(`/wiki/api/v2/pages/${PAGE_ID}?body-format=storage`);
-
-    if (!resp.ok) throw Object.assign(new Error(`HTTP ${resp.status}`), { status: resp.status });
+    const resp = await fetch(
+      `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}?body-format=storage`,
+      { headers: { 'Authorization': authHeader(), 'Accept': 'application/json' } }
+    );
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
 
     const data = await resp.json();
     confluenceVersion = data.version.number;
 
-    const bodyStorage = data.body?.storage?.value || '';
-    const match = bodyStorage.match(/<code[^>]*>([\s\S]*?)<\/code>/i);
+    const match = (data.body?.storage?.value || '').match(/<code[^>]*>([\s\S]*?)<\/code>/i);
     if (match) {
       const raw = match[1]
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
@@ -757,33 +440,16 @@ async function loadFromConfluence() {
     } else {
       loadLocal();
     }
-
-    // Fetch user profile for the badge
-    fetchUserProfile();
-
-    hideSignIn();
-    hideSpinner();
-    renderAll();
   } catch(e) {
-    if (e.status === 401) {
-      clearTokens();
-      hideSpinner();
-      showSignIn('Your session expired. Please sign in again.');
-    } else {
-      console.warn('Confluence load failed, using localStorage:', e);
-      loadLocal();
-      hideSignIn();
-      hideSpinner();
-      renderAll();
-      setPillState('failed');
-      setTimeout(() => setPillState('synced'), 4000);
-    }
+    console.warn('Confluence load failed, using localStorage:', e);
+    loadLocal();
   }
+  hideSpinner();
+  renderAll();
 }
 
 async function saveToConfluence() {
   setPillState('saving');
-
   const toStore = {};
   for (const [id, key] of Object.entries(statuses)) {
     if (key) toStore[id] = KEY_TO_LABEL[key] || key;
@@ -791,14 +457,21 @@ async function saveToConfluence() {
 
   try {
     if (confluenceVersion === null) {
-      const vResp = await cfFetch(`/wiki/api/v2/pages/${PAGE_ID}`);
+      const vResp = await fetch(
+        `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`,
+        { headers: { 'Authorization': authHeader(), 'Accept': 'application/json' } }
+      );
       if (!vResp.ok) throw new Error(`HTTP ${vResp.status}`);
       confluenceVersion = (await vResp.json()).version.number;
     }
 
-    const resp = await cfFetch(`/wiki/api/v2/pages/${PAGE_ID}`, {
+    const resp = await fetch(`${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Authorization': authHeader(),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
       body: JSON.stringify({
         id:      PAGE_ID,
         status:  'current',
@@ -827,38 +500,12 @@ function scheduleSave() {
   saveDebounceTimer = setTimeout(() => saveToConfluence(), 1000);
 }
 
-// ── User profile ──────────────────────────────────────────────────────────────
-
-async function fetchUserProfile() {
-  try {
-    const token = await getValidToken();
-    if (!token) return;
-    const resp = await fetch('https://api.atlassian.com/me', {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json' },
-    });
-    if (!resp.ok) return;
-    const me = await resp.json();
-    const name   = me.name || me.email || 'You';
-    const initials = name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
-    document.getElementById('user-name').textContent = name;
-    document.getElementById('user-avatar').textContent = initials;
-    document.getElementById('user-badge').style.display = 'flex';
-  } catch {}
+// ── Spinner / pill ────────────────────────────────────────────────────────────
+function showSpinner() { document.getElementById('spinner-overlay').classList.remove('hidden'); }
+function hideSpinner() {
+  document.getElementById('spinner-overlay').classList.add('hidden');
+  document.getElementById('main-content').style.display = 'block';
 }
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// localStorage fallback
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-function saveLocal() {
-  try { localStorage.setItem(LS_KEY, JSON.stringify(statuses)); } catch {}
-}
-function loadLocal() {
-  try { const r = localStorage.getItem(LS_KEY); if (r) statuses = JSON.parse(r); } catch {}
-}
-
-// ── Save pill ─────────────────────────────────────────────────────────────────
-
 function setPillState(state) {
   const pill = document.getElementById('save-pill');
   pill.className = 'save-pill ' + state;
@@ -870,27 +517,23 @@ function setPillState(state) {
   }[state] || state;
 }
 
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Render helpers
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
+// ── KPIs ──────────────────────────────────────────────────────────────────────
 function webTests() { return TESTS.filter(t => t.platform === 'web'); }
 
 function getKPIs() {
   const web = webTests();
-  const total = web.length;
   let confirmed=0, partial=0, missing=0, na=0, unreviewed=0;
   for (const t of web) {
     const s = statuses[t.id] || '';
-    if      (s === 'confirmed') confirmed++;
-    else if (s === 'partial')   partial++;
-    else if (s === 'missing')   missing++;
-    else if (s === 'na')        na++;
-    else                        unreviewed++;
+    if      (s==='confirmed') confirmed++;
+    else if (s==='partial')   partial++;
+    else if (s==='missing')   missing++;
+    else if (s==='na')        na++;
+    else                      unreviewed++;
   }
-  const eligible = total - na;
-  const pct = eligible > 0 ? Math.round((confirmed / eligible) * 100) : 0;
-  return { total, confirmed, partial, missing, na, unreviewed, eligible, pct };
+  const total = web.length, eligible = total - na;
+  const pct = eligible > 0 ? Math.round(confirmed / eligible * 100) : 0;
+  return { total, confirmed, partial, missing, na, unreviewed, pct };
 }
 
 function renderKPIs() {
@@ -913,57 +556,49 @@ function renderKPIs() {
   document.getElementById('leg-unreviewed').textContent = k.unreviewed + ' unreviewed';
 }
 
+// ── Test table ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 function filteredTests() {
   const q = filterSearch.toLowerCase();
   return TESTS.filter(t => {
     if (filterPlatform !== 'all' && t.platform !== filterPlatform) return false;
-    const month = new Date(t.date).toLocaleString('en-US', { month: 'short' });
-    if (filterMonth !== 'all' && month !== filterMonth) return false;
+    const mon = new Date(t.date).toLocaleString('en-US', { month: 'short' });
+    if (filterMonth !== 'all' && mon !== filterMonth) return false;
     if (q && !t.id.toLowerCase().includes(q) && !t.label.toLowerCase().includes(q) && !t.pm.toLowerCase().includes(q)) return false;
     return true;
   });
 }
 
-function formatDate(d) {
-  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short' });
-}
-
-function escHtml(str) {
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 function renderTestTable() {
   const tbody = document.getElementById('test-tbody');
   const tests = filteredTests();
-
   if (!tests.length) {
     tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No tests match the current filters.</td></tr>';
     return;
   }
-
   const groups = {};
   for (const t of tests) {
-    const month = new Date(t.date).toLocaleString('en-US', { month: 'long', year: 'numeric' });
-    (groups[month] = groups[month] || []).push(t);
+    const m = new Date(t.date).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+    (groups[m] = groups[m] || []).push(t);
   }
-
   let html = '';
   for (const [month, group] of Object.entries(groups)) {
     html += `<tr class="month-group-row"><td colspan="6">${month}</td></tr>`;
     for (const t of group) {
       const status = statuses[t.id] || '';
       const sm = STATUS_MAP[status];
-      const nid = t.id.replace(/\D/g, '');
+      const nid = t.id.replace(/\D/g,'');
       html += `<tr>
         <td class="test-id"><a href="https://ctest.admin.trv.cloud/ctest/${nid}" target="_blank">${t.id}</a></td>
         <td><span class="platform-badge platform-${t.platform}">${t.platform}</span></td>
-        <td class="date-cell">${formatDate(t.date)}</td>
+        <td class="date-cell">${new Date(t.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})}</td>
         <td class="pm-cell">${escHtml(t.pm)}</td>
         <td class="test-name">${escHtml(t.label)}</td>
         <td><select class="status-select ${sm.cls}" data-id="${t.id}" onchange="onStatusChange(this)">
-          ${Object.entries(STATUS_MAP).map(([v, i]) =>
-            `<option value="${v}"${status===v?' selected':''}>${i.label}</option>`
-          ).join('')}
+          ${Object.entries(STATUS_MAP).map(([v,i])=>`<option value="${v}"${status===v?' selected':''}>${i.label}</option>`).join('')}
         </select></td>
       </tr>`;
     }
@@ -972,8 +607,7 @@ function renderTestTable() {
 }
 
 function onStatusChange(sel) {
-  const id  = sel.dataset.id;
-  const val = sel.value;
+  const id = sel.dataset.id, val = sel.value;
   statuses[id] = val;
   saveLocal();
   sel.className = 'status-select ' + STATUS_MAP[val].cls;
@@ -982,34 +616,33 @@ function onStatusChange(sel) {
   scheduleSave();
 }
 
+// ── PM table ──────────────────────────────────────────────────────────────────
 function renderPMTable() {
   const pmMap = {};
   for (const t of webTests()) {
     const d = (pmMap[t.pm] = pmMap[t.pm] || { confirmed:0, partial:0, missing:0, unreviewed:0, total:0 });
     d.total++;
     const s = statuses[t.id] || '';
-    if      (s === 'confirmed') d.confirmed++;
-    else if (s === 'partial')   d.partial++;
-    else if (s === 'missing')   d.missing++;
-    else                        d.unreviewed++;
+    if      (s==='confirmed') d.confirmed++;
+    else if (s==='partial')   d.partial++;
+    else if (s==='missing')   d.missing++;
+    else                      d.unreviewed++;
   }
-
-  const sorted = Object.entries(pmMap).sort((a,b) => b[1].total - a[1].total);
-  document.getElementById('pm-tbody').innerHTML = sorted.map(([pm, d]) => `
-    <tr>
+  document.getElementById('pm-tbody').innerHTML = Object.entries(pmMap)
+    .sort((a,b) => b[1].total - a[1].total)
+    .map(([pm,d]) => `<tr>
       <td style="font-weight:500">${escHtml(pm)}</td>
       <td style="text-align:center">${d.total}</td>
-      <td style="text-align:center" class="pm-confirmed">${d.confirmed  || '–'}</td>
-      <td style="text-align:center" class="pm-partial">${d.partial    || '–'}</td>
-      <td style="text-align:center" class="pm-missing">${d.missing    || '–'}</td>
-      <td style="text-align:center" class="pm-unreviewed">${d.unreviewed || '–'}</td>
+      <td style="text-align:center" class="pm-confirmed">${d.confirmed  ||'–'}</td>
+      <td style="text-align:center" class="pm-partial">${d.partial    ||'–'}</td>
+      <td style="text-align:center" class="pm-missing">${d.missing    ||'–'}</td>
+      <td style="text-align:center" class="pm-unreviewed">${d.unreviewed||'–'}</td>
     </tr>`).join('');
 }
 
 function renderAll() { renderKPIs(); renderTestTable(); renderPMTable(); }
 
-// ── Tab / filter wiring ───────────────────────────────────────────────────────
-
+// ── Wiring ────────────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
@@ -1040,42 +673,8 @@ document.getElementById('search-input').addEventListener('input', e => {
   renderTestTable();
 });
 
-document.getElementById('signin-btn').addEventListener('click', () => {
-  if (isClientIdConfigured()) startSignIn();
-});
-
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-// Boot
-// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-(async function init() {
-  const params = new URLSearchParams(location.search);
-  const code   = params.get('code');
-  const state  = params.get('state');
-  const error  = params.get('error');
-
-  // Returning from Atlassian auth redirect
-  if (code && state) {
-    await handleOAuthCallback(code, state);
-    return;
-  }
-
-  if (error) {
-    hideSpinner();
-    showSignIn(`Atlassian returned an error: ${params.get('error_description') || error}`);
-    return;
-  }
-
-  // Already have a token
-  if (getAccessToken()) {
-    await loadFromConfluence();
-    return;
-  }
-
-  // Not authenticated — show sign-in
-  hideSpinner();
-  showSignIn();
-})();
+// ── Boot ──────────────────────────────────────────────────────────────────────
+loadFromConfluence();
 </script>
 </body>
 </html>
