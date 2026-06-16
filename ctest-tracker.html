@@ -405,21 +405,33 @@ function loadLocal() {
   try { const r = localStorage.getItem(LS_KEY); if (r) statuses = JSON.parse(r); } catch {}
 }
 
-// ── Confluence API ────────────────────────────────────────────────────────────
+// ── Confluence API (REST v1) ───────────────────────────────────────────────
 function buildPageBody(data) {
   const escaped = JSON.stringify(data, null, 2)
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   return `<p>C-Test KR Tracker data store. Do not edit manually.</p><pre><code>${escaped}</code></pre>`;
 }
 
+function cfHeaders(extra) {
+  return {
+    'Authorization': authHeader(),
+    'Accept': 'application/json',
+    'X-Atlassian-Token': 'no-check',
+    ...extra,
+  };
+}
+
 async function loadFromConfluence() {
   showSpinner();
   try {
     const resp = await fetch(
-      `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}?body-format=storage`,
-      { headers: { 'Authorization': authHeader(), 'Accept': 'application/json' } }
+      `${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}?expand=body.storage,version`,
+      { headers: cfHeaders() }
     );
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    if (!resp.ok) {
+      const msg = await resp.text().catch(() => '');
+      throw new Error(`HTTP ${resp.status}${msg ? ': ' + msg.slice(0,120) : ''}`);
+    }
 
     const data = await resp.json();
     confluenceVersion = data.version.number;
@@ -441,7 +453,8 @@ async function loadFromConfluence() {
       loadLocal();
     }
   } catch(e) {
-    console.warn('Confluence load failed, using localStorage:', e);
+    console.warn('Confluence load failed:', e.message);
+    setPillState('failed', e.message);
     loadLocal();
   }
   hideSpinner();
@@ -458,39 +471,37 @@ async function saveToConfluence() {
   try {
     if (confluenceVersion === null) {
       const vResp = await fetch(
-        `${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`,
-        { headers: { 'Authorization': authHeader(), 'Accept': 'application/json' } }
+        `${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}`,
+        { headers: cfHeaders() }
       );
       if (!vResp.ok) throw new Error(`HTTP ${vResp.status}`);
       confluenceVersion = (await vResp.json()).version.number;
     }
 
-    const resp = await fetch(`${CONFLUENCE_BASE}/wiki/api/v2/pages/${PAGE_ID}`, {
+    const resp = await fetch(`${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}`, {
       method: 'PUT',
-      headers: {
-        'Authorization': authHeader(),
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
+      headers: cfHeaders({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({
-        id:      PAGE_ID,
-        status:  'current',
+        type:    'page',
         title:   'C-Test KR Tracker Q2 2026 – Data Store [DO NOT EDIT MANUALLY]',
-        body:    { representation: 'storage', value: buildPageBody(toStore) },
+        body:    { storage: { value: buildPageBody(toStore), representation: 'storage' } },
         version: { number: confluenceVersion + 1 },
       }),
     });
 
     if (resp.status === 409) { confluenceVersion = null; await saveToConfluence(); return; }
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    if (!resp.ok) {
+      const msg = await resp.text().catch(() => '');
+      throw new Error(`HTTP ${resp.status}${msg ? ': ' + msg.slice(0,120) : ''}`);
+    }
 
     confluenceVersion = (await resp.json()).version.number;
     setPillState('saved');
     setTimeout(() => setPillState('synced'), 3000);
   } catch(e) {
-    console.error('Save failed:', e);
-    setPillState('failed');
-    setTimeout(() => setPillState('synced'), 5000);
+    console.error('Save failed:', e.message);
+    setPillState('failed', e.message);
+    setTimeout(() => setPillState('synced'), 6000);
   }
 }
 
@@ -506,15 +517,17 @@ function hideSpinner() {
   document.getElementById('spinner-overlay').classList.add('hidden');
   document.getElementById('main-content').style.display = 'block';
 }
-function setPillState(state) {
+function setPillState(state, detail) {
   const pill = document.getElementById('save-pill');
   pill.className = 'save-pill ' + state;
-  pill.textContent = {
+  const labels = {
     synced: 'Synced',
     saving: 'Saving to Confluence…',
     saved:  '✓ Saved – visible to all',
     failed: '⚠ Save failed – cached locally',
-  }[state] || state;
+  };
+  pill.textContent = (labels[state] || state) + (detail ? ` (${detail})` : '');
+  pill.title = detail || '';
 }
 
 // ── KPIs ──────────────────────────────────────────────────────────────────────
