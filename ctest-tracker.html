@@ -179,9 +179,49 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
   .empty-row td { text-align: center; color: #9CA3AF; padding: 32px; }
+
+  /* ── Password screen ── */
+  #password-screen {
+    position: fixed; inset: 0; background: #F8F9FB;
+    display: flex; align-items: center; justify-content: center; z-index: 9996;
+  }
+  #password-screen.hidden { display: none; }
+  .password-card {
+    background: #fff; border: 1px solid #E5E7EB; border-radius: 16px;
+    padding: 40px 44px; width: 380px; max-width: 95vw;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  .password-card h1 { font-size: 18px; font-weight: 700; color: #111827; margin-bottom: 6px; }
+  .password-card p  { font-size: 13px; color: #6B7280; margin-bottom: 24px; }
+  .password-card input {
+    width: 100%; padding: 10px 14px; border: 1px solid #D1D5DB; border-radius: 8px;
+    font-size: 14px; font-family: inherit; outline: none; margin-bottom: 12px;
+    text-align: center; letter-spacing: 0.05em; transition: border-color 0.15s;
+  }
+  .password-card input:focus { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+  .password-card input.error { border-color: #DC2626; }
+  .password-card .btn-primary {
+    width: 100%; padding: 10px; background: #6366F1; color: #fff;
+    border: none; border-radius: 8px; font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: inherit; transition: background 0.15s;
+  }
+  .password-card .btn-primary:hover { background: #4F46E5; }
+  .password-card .err-msg { color: #DC2626; font-size: 12px; margin-top: 8px; display: none; }
 </style>
 </head>
 <body>
+
+<!-- Password screen -->
+<div id="password-screen">
+  <div class="password-card">
+    <h1>C-Test Acceptance Tracker</h1>
+    <p>Enter the team password to continue.</p>
+    <input type="password" id="password-input" placeholder="Password" autocomplete="current-password">
+    <button class="btn-primary" id="password-submit">Continue</button>
+    <p class="err-msg" id="password-error">Incorrect password. Try again.</p>
+  </div>
+</div>
 
 <!-- Spinner -->
 <div id="spinner-overlay">
@@ -304,6 +344,39 @@
 </div>
 
 <script>
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// PASSWORD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const PASSWORD_HASH = 'e89f73d9cf227e96d0c5cc0c085063d5f571a59ea67a21ba014d83f8b2d8739c';
+
+async function hashPassword(pw) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function checkPassword() {
+  const input = document.getElementById('password-input');
+  const errEl = document.getElementById('password-error');
+  const hash  = await hashPassword(input.value);
+  if (hash === PASSWORD_HASH) {
+    sessionStorage.setItem('ctest_auth', '1');
+    document.getElementById('password-screen').classList.add('hidden');
+    loadFromGist();
+  } else {
+    input.classList.add('error');
+    errEl.style.display = 'block';
+    input.value = '';
+    input.focus();
+  }
+}
+
+document.getElementById('password-submit').addEventListener('click', checkPassword);
+document.getElementById('password-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') checkPassword();
+  document.getElementById('password-input').classList.remove('error');
+  document.getElementById('password-error').style.display = 'none';
+});
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIGURATION
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -638,7 +711,13 @@ document.getElementById('search-input').addEventListener('input', e => {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-loadFromGist();
+if (sessionStorage.getItem('ctest_auth') === '1') {
+  document.getElementById('password-screen').classList.add('hidden');
+  loadFromGist();
+} else {
+  document.getElementById('spinner-overlay').classList.add('hidden');
+  document.getElementById('password-input').focus();
+}
 </script>
 </body>
 </html>
