@@ -306,14 +306,11 @@
 <script>
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // CONFIGURATION
-// Generate your API token at: https://id.atlassian.com/manage-api-tokens
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const CONF_EMAIL = 'emilio.martins@trivago.com';
-const CONF_TOKEN = 'ATATT3xFfGF0VJq3g0ZHXHrj0xdMw7Tn_LN1cdrNqKi2fWWDdNrLDF2QytX6BybVtfCbPX2JlVyU6DL0YPvnfEE0Kz0iry_VG2V_qFgRdOLVDz_SJ1cK39CjyfkhRV55KO3bnFn3ymy9KlzMQp96qLAvtKNC-6wq4-CX8POxhkO766Dbxy5UBeE=7BFC4DE3';
-
-const CONFLUENCE_BASE = 'https://trivago.atlassian.net';
-const PAGE_ID = '4772791319';
-const LS_KEY  = 'ctest_tracker_q2_2026';
+const GIST_ID    = '7e1e218f6299afb76f07341feed52629';
+const GIST_TOKEN = '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';
+const GIST_FILE  = 'statuses.json';
+const LS_KEY     = 'ctest_tracker_q2_2026';
 
 // ── Status maps ──────────────────────────────────────────────────────────────
 const STATUS_MAP = {
@@ -385,16 +382,15 @@ const TESTS = [
 
 // ── App state ────────────────────────────────────────────────────────────────
 let statuses = {};
-let confluenceVersion = null;
 let saveDebounceTimer = null;
 let activeTab = 'by-test';
 let filterPlatform = 'all';
 let filterMonth = 'all';
 let filterSearch = '';
 
-// ── Auth header ───────────────────────────────────────────────────────────────
-function authHeader() {
-  return 'Basic ' + btoa(CONF_EMAIL + ':' + CONF_TOKEN);
+// ── Gist auth header ──────────────────────────────────────────────────────────
+function gistHeaders(extra) {
+  return { 'Authorization': `Bearer ${GIST_TOKEN}`, 'Accept': 'application/json', ...extra };
 }
 
 // ── localStorage ──────────────────────────────────────────────────────────────
@@ -405,43 +401,17 @@ function loadLocal() {
   try { const r = localStorage.getItem(LS_KEY); if (r) statuses = JSON.parse(r); } catch {}
 }
 
-// ── Confluence API (REST v1) ───────────────────────────────────────────────
-function buildPageBody(data) {
-  const escaped = JSON.stringify(data, null, 2)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  return `<p>C-Test KR Tracker data store. Do not edit manually.</p><pre><code>${escaped}</code></pre>`;
-}
-
-function cfHeaders(extra) {
-  return {
-    'Authorization': authHeader(),
-    'Accept': 'application/json',
-    'X-Atlassian-Token': 'no-check',
-    ...extra,
-  };
-}
-
-async function loadFromConfluence() {
+// ── GitHub Gist API ───────────────────────────────────────────────────────────
+async function loadFromGist() {
   showSpinner();
   try {
-    const resp = await fetch(
-      `${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}?expand=body.storage,version`,
-      { headers: cfHeaders() }
-    );
-    if (!resp.ok) {
-      const msg = await resp.text().catch(() => '');
-      throw new Error(`HTTP ${resp.status}${msg ? ': ' + msg.slice(0,120) : ''}`);
-    }
-
+    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, { headers: gistHeaders() });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const data = await resp.json();
-    confluenceVersion = data.version.number;
-
-    const match = (data.body?.storage?.value || '').match(/<code[^>]*>([\s\S]*?)<\/code>/i);
-    if (match) {
-      const raw = match[1]
-        .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"');
+    const content = data.files?.[GIST_FILE]?.content;
+    if (content) {
       try {
-        const parsed = JSON.parse(raw.trim());
+        const parsed = JSON.parse(content);
         const converted = {};
         for (const [id, val] of Object.entries(parsed)) {
           converted[id] = STATUS_TO_KEY[val] || val || '';
@@ -453,7 +423,7 @@ async function loadFromConfluence() {
       loadLocal();
     }
   } catch(e) {
-    console.warn('Confluence load failed:', e.message);
+    console.warn('Gist load failed:', e.message);
     setPillState('failed', e.message);
     loadLocal();
   }
@@ -461,41 +431,22 @@ async function loadFromConfluence() {
   renderAll();
 }
 
-async function saveToConfluence() {
+async function saveToGist() {
   setPillState('saving');
   const toStore = {};
   for (const [id, key] of Object.entries(statuses)) {
     if (key) toStore[id] = KEY_TO_LABEL[key] || key;
   }
-
   try {
-    if (confluenceVersion === null) {
-      const vResp = await fetch(
-        `${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}`,
-        { headers: cfHeaders() }
-      );
-      if (!vResp.ok) throw new Error(`HTTP ${vResp.status}`);
-      confluenceVersion = (await vResp.json()).version.number;
-    }
-
-    const resp = await fetch(`${CONFLUENCE_BASE}/wiki/rest/api/content/${PAGE_ID}`, {
-      method: 'PUT',
-      headers: cfHeaders({ 'Content-Type': 'application/json' }),
-      body: JSON.stringify({
-        type:    'page',
-        title:   'C-Test KR Tracker Q2 2026 – Data Store [DO NOT EDIT MANUALLY]',
-        body:    { storage: { value: buildPageBody(toStore), representation: 'storage' } },
-        version: { number: confluenceVersion + 1 },
-      }),
+    const resp = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: gistHeaders({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ files: { [GIST_FILE]: { content: JSON.stringify(toStore, null, 2) } } }),
     });
-
-    if (resp.status === 409) { confluenceVersion = null; await saveToConfluence(); return; }
     if (!resp.ok) {
       const msg = await resp.text().catch(() => '');
       throw new Error(`HTTP ${resp.status}${msg ? ': ' + msg.slice(0,120) : ''}`);
     }
-
-    confluenceVersion = (await resp.json()).version.number;
     setPillState('saved');
     setTimeout(() => setPillState('synced'), 3000);
   } catch(e) {
@@ -508,7 +459,7 @@ async function saveToConfluence() {
 function scheduleSave() {
   clearTimeout(saveDebounceTimer);
   setPillState('saving');
-  saveDebounceTimer = setTimeout(() => saveToConfluence(), 1000);
+  saveDebounceTimer = setTimeout(() => saveToGist(), 1000);
 }
 
 // ── Spinner / pill ────────────────────────────────────────────────────────────
@@ -687,7 +638,7 @@ document.getElementById('search-input').addEventListener('input', e => {
 });
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
-loadFromConfluence();
+loadFromGist();
 </script>
 </body>
 </html>
