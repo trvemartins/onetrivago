@@ -6,6 +6,12 @@
       "runtimeExecutable": "/usr/bin/python3",
       "runtimeArgs": ["-m", "http.server", "3458"],
       "port": 3458
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["backend.py"],
+      "port": 3459
     }
   ]
 }

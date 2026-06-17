@@ -29,39 +29,9 @@
   </div>
   <div class="flex items-center gap-3">
     <div id="sync-badge" class="hidden text-xs font-medium px-3 py-1.5 rounded-full"></div>
-    <button onclick="toggleSettings()" class="text-xs text-gray-500 hover:text-gray-800 flex items-center gap-1 border border-gray-200 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition">
-      &#9881; Settings
-    </button>
   </div>
 </header>
 
-<!-- ── Settings panel ─────────────────────────────────────────────────── -->
-<div id="settings-panel" class="hidden bg-amber-50 border-b border-amber-200 px-6 py-4">
-  <div class="max-w-3xl">
-    <p class="text-xs font-semibold text-amber-800 mb-3">GitHub Sync Configuration &mdash; changes are committed back to your repository</p>
-    <div class="grid grid-cols-3 gap-3">
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Personal Access Token</label>
-        <input id="cfg-token" type="password" placeholder="ghp_xxxxxxxxxxxx"
-          class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Repository Owner</label>
-        <input id="cfg-owner" type="text" placeholder="trvemartins"
-          class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-      </div>
-      <div>
-        <label class="block text-xs font-medium text-gray-600 mb-1">Repository Name</label>
-        <input id="cfg-repo" type="text" placeholder="onetrivago"
-          class="w-full text-xs border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-      </div>
-    </div>
-    <div class="flex gap-2 mt-3">
-      <button onclick="saveSettings()" class="text-xs bg-indigo-600 text-white px-4 py-1.5 rounded-lg hover:bg-indigo-700 transition font-medium">Save settings</button>
-      <button onclick="toggleSettings()" class="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5">Cancel</button>
-    </div>
-  </div>
-</div>
 
 <!-- ── Error banner ───────────────────────────────────────────────────── -->
 <div id="error-banner" class="hidden bg-red-50 border-b border-red-200 px-6 py-3 flex items-center gap-2 text-sm text-red-700">
@@ -166,60 +136,11 @@ const STATUS_KEY = {
 };
 
 let tests     = [];
-let fileSha   = null;
 let syncTimer = null;
 
-// ── Settings ─────────────────────────────────────────────────────────────
-function loadSettingsIntoPanel() {
-  document.getElementById('cfg-token').value = localStorage.getItem('gh_token') || '';
-  document.getElementById('cfg-owner').value = localStorage.getItem('gh_owner') || '';
-  document.getElementById('cfg-repo').value  = localStorage.getItem('gh_repo')  || '';
-}
-
-function saveSettings() {
-  localStorage.setItem('gh_token', document.getElementById('cfg-token').value.trim());
-  localStorage.setItem('gh_owner', document.getElementById('cfg-owner').value.trim());
-  localStorage.setItem('gh_repo',  document.getElementById('cfg-repo').value.trim());
-  toggleSettings();
-}
-
-function getConfig() {
-  return {
-    token: localStorage.getItem('gh_token') || '',
-    owner: localStorage.getItem('gh_owner') || '',
-    repo:  localStorage.getItem('gh_repo')  || '',
-  };
-}
-
-function toggleSettings() {
-  const panel = document.getElementById('settings-panel');
-  panel.classList.toggle('hidden');
-  if (!panel.classList.contains('hidden')) loadSettingsIntoPanel();
-}
 
 // ── Data loading ─────────────────────────────────────────────────────────
 async function loadTests() {
-  const cfg = getConfig();
-
-  if (cfg.token && cfg.owner && cfg.repo) {
-    try {
-      const resp = await fetch(
-        'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/data/tests.json',
-        { headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' } }
-      );
-      if (resp.ok) {
-        const meta = await resp.json();
-        fileSha = meta.sha;
-        const decoded = JSON.parse(atob(meta.content.replace(/\n/g, '')));
-        const local = getLocalStatuses();
-        tests = decoded.map(t => ({ ...t, status: local[t.testId] !== undefined ? local[t.testId] : t.status }));
-        return;
-      }
-    } catch(e) {
-      console.warn('GitHub fetch failed, falling back to static file:', e);
-    }
-  }
-
   try {
     const resp = await fetch('data/tests.json');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
@@ -269,52 +190,31 @@ function hideError() {
   document.getElementById('error-banner').classList.add('hidden');
 }
 
-// ── GitHub sync ──────────────────────────────────────────────────────────
-async function syncToGitHub() {
-  const cfg = getConfig();
-  if (!cfg.token || !cfg.owner || !cfg.repo) return;
-
+// ── Backend sync ──────────────────────────────────────────────────────────
+async function syncToBackend(testId, newStatus) {
   try {
-    if (!fileSha) {
-      const r = await fetch(
-        'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/data/tests.json',
-        { headers: { 'Authorization': 'Bearer ' + cfg.token, 'Accept': 'application/vnd.github+json' } }
-      );
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      fileSha = (await r.json()).sha;
-    }
-
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(tests, null, 2))));
-    const resp = await fetch(
-      'https://api.github.com/repos/' + cfg.owner + '/' + cfg.repo + '/contents/data/tests.json',
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + cfg.token,
-          'Accept': 'application/vnd.github+json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: 'Update C-test audit statuses', content, sha: fileSha }),
-      }
-    );
+    const resp = await fetch('http://localhost:3459/api/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ testId, newStatus }),
+    });
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.message || 'HTTP ' + resp.status);
+      throw new Error(err.error || 'HTTP ' + resp.status);
     }
 
-    fileSha = (await resp.json()).content.sha;
     setSyncBadge('synced');
     hideError();
   } catch(e) {
     setSyncBadge('error');
-    showError('Sync failed — changes saved locally only. Check your token and SSO authorisation. (' + e.message + ')');
+    showError('Sync failed — changes saved locally. Backend may be offline. (' + e.message + ')');
   }
 }
 
-function scheduleSyncToGitHub() {
+function scheduleSyncToBackend(testId, newStatus) {
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(() => syncToGitHub(), 800);
+  syncTimer = setTimeout(() => syncToBackend(testId, newStatus), 800);
 }
 
 // ── Status change ────────────────────────────────────────────────────────
@@ -329,7 +229,7 @@ function onStatusChange(testId, newStatus) {
   persistLocalStatus(testId, newStatus);
   setSyncBadge('saving');
   renderMetrics();
-  scheduleSyncToGitHub();
+  scheduleSyncToBackend(testId, newStatus);
 }
 
 function applySelectColour(sel, status) {
