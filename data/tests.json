@@ -1,0 +1,20 @@
+[
+  { "testId": "CT-101", "name": "Homepage Redesign Checkout", "pm": "Sarah Jenkins", "platform": "Web", "month": "2026-04", "status": "Has iOS + Android deliverables" },
+  { "testId": "CT-102", "name": "Search Algorithm V2", "pm": "Alex Patel", "platform": "Web", "month": "2026-04", "status": "Missing deliverables" },
+  { "testId": "CT-103", "name": "Onboarding Flow Simplification", "pm": "Maria Costa", "platform": "iOS", "month": "2026-04", "status": "Not applicable" },
+  { "testId": "CT-104", "name": "Price Filter UX Revamp", "pm": "James Okafor", "platform": "Web", "month": "2026-04", "status": "Missing deliverables" },
+  { "testId": "CT-105", "name": "Hotel Card Image Carousel", "pm": "Sarah Jenkins", "platform": "Web", "month": "2026-04", "status": "Partial – one platform only" },
+  { "testId": "CT-106", "name": "Push Notification CTR Test", "pm": "Alex Patel", "platform": "Android", "month": "2026-05", "status": "Not applicable" },
+  { "testId": "CT-107", "name": "Map View Toggle Experiment", "pm": "Maria Costa", "platform": "Web", "month": "2026-05", "status": "Missing deliverables" },
+  { "testId": "CT-108", "name": "Loyalty Badge Placement", "pm": "James Okafor", "platform": "Web", "month": "2026-05", "status": "Has iOS + Android deliverables" },
+  { "testId": "CT-109", "name": "Date Picker Redesign", "pm": "Sarah Jenkins", "platform": "Web", "month": "2026-05", "status": "Missing deliverables" },
+  { "testId": "CT-110", "name": "Deal Score Visibility", "pm": "Alex Patel", "platform": "Web", "month": "2026-05", "status": "Missing deliverables" },
+  { "testId": "CT-111", "name": "App Login Entry Point Test", "pm": "Maria Costa", "platform": "iOS", "month": "2026-05", "status": "Not applicable" },
+  { "testId": "CT-112", "name": "Sort Order Default Change", "pm": "James Okafor", "platform": "Web", "month": "2026-05", "status": "Partial – one platform only" },
+  { "testId": "CT-113", "name": "AI Review Summary Expansion", "pm": "Sarah Jenkins", "platform": "Web", "month": "2026-06", "status": "Missing deliverables" },
+  { "testId": "CT-114", "name": "Favorites Header Shortcut", "pm": "Alex Patel", "platform": "Web", "month": "2026-06", "status": "Has iOS + Android deliverables" },
+  { "testId": "CT-115", "name": "Android Deal Card Parity", "pm": "Maria Costa", "platform": "Android", "month": "2026-06", "status": "Not applicable" },
+  { "testId": "CT-116", "name": "Filter Sidebar Auto-Apply", "pm": "James Okafor", "platform": "Web", "month": "2026-06", "status": "Missing deliverables" },
+  { "testId": "CT-117", "name": "Dateless Search Expansion", "pm": "Sarah Jenkins", "platform": "Web", "month": "2026-06", "status": "Missing deliverables" },
+  { "testId": "CT-118", "name": "Member Rate Fencing V2", "pm": "Alex Patel", "platform": "Web", "month": "2026-06", "status": "Partial – one platform only" }
+]
