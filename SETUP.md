@@ -26,7 +26,7 @@ python3 app.py
 |----------|-------------|---------|
 | `CONFLUENCE_TOKEN` | Confluence API token for status updates | `ATCTT3xxxxxxxxxxx` |
 | `JIRA_TOKEN` | Jira API token for fetching tests | `ATATT3xxxxxxxxxxx` |
-| `DASHBOARD_PASSWORD` | Login password | `ctest2026` |
+| `DASHBOARD_PASSWORD` | Login password | `warp#engage` |
 
 ### Optional
 
@@ -41,7 +41,7 @@ python3 app.py
 
 The dashboard now requires a password to access.
 
-**Default password:** `ctest2026`
+**Default password:** `warp#engage`
 
 **To change password:**
 ```bash
@@ -237,7 +237,7 @@ curl -b cookies.txt -X POST http://localhost:5000/api/update-status \
 ### "Invalid password" on login
 
 - Check `DASHBOARD_PASSWORD` env var is set
-- Default password is `ctest2026`
+- Default password is `warp#engage`
 
 ### No tests showing after login
 

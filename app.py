@@ -19,7 +19,7 @@ CONFLUENCE_TOKEN = os.environ.get('CONFLUENCE_TOKEN')
 JIRA_TOKEN = os.environ.get('JIRA_TOKEN')
 JIRA_EMAIL = os.environ.get('JIRA_EMAIL', 'emilio.martins@trivago.com')
 JIRA_DOMAIN = 'trivago.atlassian.net'
-DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD', 'ctest2026')
+DASHBOARD_PASSWORD = os.environ.get('DASHBOARD_PASSWORD', 'warp#engage')
 CONFLUENCE_CLOUD = 'trivago.atlassian.net'
 CONFLUENCE_PAGE_ID = 'FwR7HAE'
 
