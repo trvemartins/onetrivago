@@ -58,8 +58,8 @@ async function detectBackend() {
   window.API_CONFIG.available = false;
 }
 
-// Run detection before page loads
-detectBackend().then(() => {
+// Run detection before page loads (store promise for later)
+window.backendDetectionPromise = detectBackend().then(() => {
   const statusEl = document.getElementById('backend-status');
   if (statusEl) {
     if (window.API_CONFIG.available) {
@@ -70,6 +70,8 @@ detectBackend().then(() => {
       statusEl.className = 'unavailable';
     }
   }
+  // Re-update UI after backend detection completes
+  updateBackendUI();
 });
 </script>
 </head>
