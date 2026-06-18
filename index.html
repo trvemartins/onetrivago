@@ -17,7 +17,61 @@
   select.status-na        { background:#f3f4f6; color:#4b5563; border-color:#d1d5db; }
   .sticky-filters { position: sticky; top: 0; z-index: 10; }
   tr:hover td { background: #f9fafb; }
+  #backend-status { position: fixed; bottom: 12px; right: 12px; padding: 8px 12px; border-radius: 6px; font-size: 12px; z-index: 50; font-weight: 500; }
+  #backend-status.available { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  #backend-status.unavailable { background: #fef9c3; color: #854d0e; border: 1px solid #fde047; }
 </style>
+
+<script>
+// ── Backend Availability Detection ────────────────────────────────────────
+window.API_CONFIG = {
+  url: null,
+  available: false,
+};
+
+async function detectBackend() {
+  const possibleUrls = [
+    'http://localhost:5000',
+    'http://127.0.0.1:5000',
+    window.location.origin,
+  ];
+
+  for (const url of possibleUrls) {
+    try {
+      const resp = await fetch(`${url}/health`, {
+        method: 'GET',
+        mode: 'cors',
+        signal: AbortSignal.timeout(2000),
+      });
+      if (resp.ok) {
+        window.API_CONFIG.url = url;
+        window.API_CONFIG.available = true;
+        console.log(`✓ Backend detected at ${url}`);
+        return;
+      }
+    } catch (e) {
+      // Try next URL
+    }
+  }
+
+  console.log('⚠ No backend available — running in read-only mode');
+  window.API_CONFIG.available = false;
+}
+
+// Run detection before page loads
+detectBackend().then(() => {
+  const statusEl = document.getElementById('backend-status');
+  if (statusEl) {
+    if (window.API_CONFIG.available) {
+      statusEl.textContent = '✓ Backend connected';
+      statusEl.className = 'available';
+    } else {
+      statusEl.textContent = '⚠ Read-only mode';
+      statusEl.className = 'unavailable';
+    }
+  }
+});
+</script>
 </head>
 <body class="bg-gray-50 min-h-screen text-gray-800">
 
@@ -29,6 +83,7 @@
   </div>
   <div class="flex items-center gap-3">
     <div id="sync-badge" class="hidden text-xs font-medium px-3 py-1.5 rounded-full"></div>
+    <div id="backend-status" class="text-xs font-medium px-3 py-1.5 rounded-full available">Backend loading…</div>
   </div>
 </header>
 
@@ -192,8 +247,14 @@ function hideError() {
 
 // ── Backend sync ──────────────────────────────────────────────────────────
 async function syncToBackend(testId, newStatus) {
+  if (!window.API_CONFIG.available) {
+    setSyncBadge('error');
+    showError('Backend not available. Edit data/tests.json directly on GitHub.');
+    return;
+  }
+
   try {
-    const resp = await fetch('http://localhost:3459/api/update-status', {
+    const resp = await fetch(`${window.API_CONFIG.url}/api/update-status`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ testId, newStatus }),
@@ -290,6 +351,20 @@ function renderMetrics() {
   ).join('');
 }
 
+// ── Backend Status Management ─────────────────────────────────────────────
+function updateBackendUI() {
+  const selects = document.querySelectorAll('select[data-id]');
+  selects.forEach(sel => {
+    if (window.API_CONFIG.available) {
+      sel.disabled = false;
+      sel.title = '';
+    } else {
+      sel.disabled = true;
+      sel.title = 'Backend not available. Edit data/tests.json on GitHub directly.';
+    }
+  });
+}
+
 // ── Table ─────────────────────────────────────────────────────────────────
 function renderTable() {
   const q        = document.getElementById('search').value.toLowerCase();
@@ -365,6 +440,7 @@ function populateMonthFilter() {
   populateMonthFilter();
   renderMetrics();
   renderTable();
+  updateBackendUI();
 })();
 </script>
 </body>

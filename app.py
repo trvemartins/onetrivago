@@ -3,10 +3,12 @@ import os
 import json
 import base64
 import requests
-from flask import Flask, request, jsonify
+from flask import Flask, send_from_directory, request, jsonify
 from flask_cors import CORS
 
-app = Flask(__name__)
+# ── Initialization ──
+
+app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
 GITHUB_TOKEN = os.environ.get('GITHUB_TOKEN')
@@ -15,7 +17,23 @@ GITHUB_REPO = 'onetrivago'
 GITHUB_FILE = 'data/tests.json'
 
 if not GITHUB_TOKEN:
-    print('WARNING: GITHUB_TOKEN environment variable not set. Backend will not work.')
+    print('WARNING: GITHUB_TOKEN environment variable not set. Backend edit functionality disabled.')
+
+# ── Static File Serving ──
+
+@app.route('/')
+def serve_index():
+    return send_from_directory('.', 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    # Serve file if it exists
+    if path and os.path.isfile(path):
+        return send_from_directory('.', path)
+    # SPA fallback: serve index.html for client-side routing
+    return send_from_directory('.', 'index.html')
+
+# ── GitHub API Proxy ──
 
 def get_file_sha():
     """Fetch the current SHA of data/tests.json"""
@@ -51,6 +69,8 @@ def commit_tests_data(tests_data, sha):
         headers={'Authorization': f'Bearer {GITHUB_TOKEN}', 'Accept': 'application/vnd.github+json'}
     )
     return resp.status_code == 200, resp.json() if resp.status_code != 200 else None
+
+# ── API Endpoints ──
 
 @app.route('/api/update-status', methods=['POST'])
 def update_status():
@@ -91,5 +111,9 @@ def health():
     """Health check endpoint"""
     return jsonify({'status': 'ok', 'github_configured': bool(GITHUB_TOKEN)}), 200
 
+# ── Server ──
+
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=3459, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.environ.get('DEBUG', 'false').lower() == 'true'
+    app.run(host='127.0.0.1', port=port, debug=debug)
