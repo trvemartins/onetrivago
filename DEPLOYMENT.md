@@ -54,7 +54,7 @@ You run `python3 app.py` on your machine. Team members on your local network acc
 **One-time:**
 ```bash
 pip3 install -r requirements.txt
-export GITHUB_TOKEN=ghp_xxxxx  # GitHub PAT with contents:write
+export CONFLUENCE_TOKEN=ATCTT3xxxxxxx  # Confluence API token
 ```
 
 **To start the server:**
@@ -113,7 +113,7 @@ Pick one:
 
 **3. Set environment variable**
 - Settings → Environment
-- Add `GITHUB_TOKEN=ghp_xxxxx`
+- Add `CONFLUENCE_TOKEN=ATCTT3xxxxxxx`
 
 **4. Deploy**
 - Click Deploy
@@ -181,7 +181,7 @@ Follow prompts:
 
 **4. Set GitHub token**
 ```bash
-flyctl secrets set GITHUB_TOKEN=ghp_xxxxx
+flyctl secrets set CONFLUENCE_TOKEN=ATCTT3xxxxxxx
 ```
 
 **5. Deploy**
@@ -257,7 +257,7 @@ Requires refactoring `app.py` to Vercel's serverless format. Only recommend if T
 
 ### From A (GitHub Pages) → B (Local Backend)
 
-1. Start local server: `export GITHUB_TOKEN=...; python3 app.py`
+1. Start local server: `export CONFLUENCE_TOKEN=...; python3 app.py`
 2. Share `http://<your-ip>:5000` with team
 3. GitHub Pages URL still works (read-only fallback)
 
@@ -282,7 +282,7 @@ Check:
 1. **requirements.txt valid:** Run locally first: `pip3 install -r requirements.txt`
 2. **gunicorn added:** Render/Fly.io need gunicorn for production
 3. **Python version:** Render/Fly.io use Python 3.10+
-4. **Environment variables:** `GITHUB_TOKEN` set in platform settings
+4. **Environment variables:** `CONFLUENCE_TOKEN` set in platform settings
 
 ### "Deployed but 404 / app won't start"
 
@@ -292,7 +292,7 @@ Check:
 
 ### "Deployed but backend API returns 500"
 
-1. **GITHUB_TOKEN valid:** `curl https://your-url/health` should show `"github_configured": true`
+1. **CONFLUENCE_TOKEN valid:** `curl https://your-url/health` should show `"github_configured": true`
 2. **GitHub token has write access:** Check token scopes on GitHub
 3. **Token SSO authorized:** If using Trivago's org, token needs SSO auth
 
@@ -306,7 +306,7 @@ Backend isn't running. Check:
 ### "Changes not syncing to GitHub from deployed backend"
 
 Same as local troubleshooting in [DEVELOPMENT.md](DEVELOPMENT.md#troubleshooting):
-1. Check GITHUB_TOKEN is set
+1. Check CONFLUENCE_TOKEN is set
 2. Check token has `contents:write`
 3. Check `data/tests.json` exists in repo
 4. Look at deployment logs for errors

@@ -50,7 +50,7 @@ Recommended for ongoing use — gives team always-on access without running a lo
 
 - **Frontend** (index.html) — Vue/vanilla JS SPA with Tailwind CSS
 - **Backend** (app.py) — Unified Flask server (static files + API endpoints)
-- **Data** (data/tests.json on GitHub) — Single source of truth
+- **Data** (Confluence page) — Single source of truth at https://trivago.atlassian.net/wiki/x/FwR7HAE
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for design decisions.
 

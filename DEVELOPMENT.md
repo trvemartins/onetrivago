@@ -27,19 +27,19 @@ This installs:
 - `flask-cors` — enable browser requests to backend
 - `requests` — GitHub API calls
 
-### 3. Set your GitHub token
+### 3. Set your Confluence API token
 
 ```bash
-export GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxx
+export CONFLUENCE_TOKEN=ATCTT3xxxxxxxxxxxxxxxxxxx
 ```
 
-**How to create a GitHub PAT:**
-1. GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
-2. Click "Generate new token (classic)"
+**How to create a Confluence API token:**
+1. Confluence → Settings (top-right) → Personal settings → API tokens
+2. Click "Create API token"
 3. Name: `onetrivago-dev`
-4. Scopes: Check `repo` → `contents:write` (allows writing to data/tests.json)
-5. **Important:** Must be SSO-authorized for Trivago's GitHub org
-6. Copy the token and run: `export GITHUB_TOKEN=...`
+4. Copy the token and run: `export CONFLUENCE_TOKEN=...`
+
+The backend will sync test status updates to: https://trivago.atlassian.net/wiki/x/FwR7HAE
 
 ### 4. Start the server
 
@@ -90,28 +90,16 @@ Changes to API endpoints take effect immediately after restart.
 
 ### Data Schema
 
-Test data lives in `data/tests.json` on GitHub:
+Test data lives in a Confluence page table: https://trivago.atlassian.net/wiki/x/FwR7HAE
 
-```json
-[
-  {
-    "testId": "CT-101",
-    "platform": "Web",
-    "month": "April",
-    "name": "Test name",
-    "pm": "PM name",
-    "status": "Has iOS + Android deliverables"
-  },
-  ...
-]
-```
+Columns: Test ID | Name | PM | Platform | Month | Status
 
 When you update a status in the dashboard:
 1. Frontend sends POST to backend
-2. Backend fetches `data/tests.json` from GitHub API
-3. Backend updates the target test's `status` field
-4. Backend commits updated JSON back to GitHub
-5. Frontend shows "Synced to GitHub" badge
+2. Backend fetches the Confluence page (parses HTML table)
+3. Backend updates the target test's status in the table
+4. Backend updates the Confluence page with new HTML
+5. Frontend shows "Synced to Confluence" badge
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for full data flow.
 

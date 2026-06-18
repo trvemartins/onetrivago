@@ -5,11 +5,11 @@ Design and technical decisions for the C-Test Audit Dashboard.
 ## Problem Statement
 
 Team members need to view and edit test audit data without:
-- Needing GitHub accounts
-- Managing GitHub Personal Access Tokens (security risk)
-- Manual JSON edits
+- Needing Confluence accounts  
+- Managing Confluence API tokens (security risk to share)
+- Manual table edits
 
-**Solution:** Backend proxy — team talks to a local server that uses a shared PAT to access GitHub.
+**Solution:** Backend proxy — team accesses via dashboard, backend uses a shared token to update Confluence.
 
 ## System Overview
 
@@ -23,28 +23,26 @@ Team members need to view and edit test audit data without:
     ┌────────────▼──────────────────────────────────────────────────┐
     │                  Unified Flask Server (app.py)                │
     │  ┌──────────────────────┐  ┌──────────────────────────────┐ │
-    │  │  Static File Server  │  │    GitHub API Proxy          │ │
+    │  │  Static File Server  │  │  Confluence API Proxy        │ │
     │  │  ├─ index.html       │  │  ├─ POST /api/update-status │ │
     │  │  ├─ ctest-tracker.html    │  │    GET /health           │ │
-    │  │  └─ data/tests.json  │  │                              │ │
+    │  │  └─ data/           │  │                              │ │
     │  └──────────────────────┘  └──────────────────────────────┘ │
     │              ▲                           │                     │
     │              │                           │                     │
-    │         Serves HTML                  Uses GITHUB_TOKEN        │
+    │         Serves HTML                  Uses CONFLUENCE_TOKEN    │
     │         CSS, JS                       (server-only)           │
     │                                                                │
     └────────────────┬────────────────────────┬────────────────────┘
                      │                        │
-         Reads from  │                        │  API calls with PAT
+         Reads from  │                        │  API calls with token
          filesystem  │                        │
                      │                        ▼
-                     │        ┌───────────────────────────┐
-                     │        │  GitHub API               │
-                     │        │  ├─ Fetch data/tests.json │
-                     │        │  └─ Commit updates        │
-                     │        └───────────────────────────┘
-                     │
-                     └─ Can also serve from /data/tests.json
+                     │        ┌───────────────────────────────────┐
+                     │        │  Confluence API                   │
+                     │        │  ├─ Fetch page FwR7HAE            │
+                     │        │  └─ Update page with new table    │
+                     │        └───────────────────────────────────┘
 ```
 
 ## Data Flow
@@ -53,7 +51,7 @@ Team members need to view and edit test audit data without:
 
 1. **User opens dashboard** → Browser loads `http://localhost:5000`
 2. **Frontend fetches** `/` → Flask serves `index.html`
-3. **JavaScript loads** `data/tests.json` → Fetches from `/data/tests.json`
+3. **Frontend loads local data** (fallback in browser for demo mode)
 4. **Frontend detects backend** → Pings `/health` endpoint
 5. **Dashboard renders** → Shows data, enables/disables editing based on backend availability
 
@@ -69,12 +67,13 @@ Team members need to view and edit test audit data without:
      "newStatus": "Has iOS + Android deliverables"
    }
    ```
-5. **Backend receives request** → Fetches current `data/tests.json` from GitHub API
-6. **Backend updates** → Finds test CT-101, updates status field
-7. **Backend commits** → Uploads updated JSON back to GitHub with commit message
-8. **GitHub updates** → `data/tests.json` is now changed in the repo
-9. **Frontend shows** → "Synced to GitHub ✓" badge
-10. **GitHub Pages** → Reflects change within ~5 minutes (cache)
+5. **Backend receives request** → Fetches Confluence page (FwR7HAE) via API
+6. **Backend parses** → Extracts test data from HTML table
+7. **Backend updates** → Finds test CT-101, changes status field
+8. **Backend converts** → Regenerates HTML table with updated data
+9. **Backend posts** → Updates Confluence page with new table content
+10. **Confluence updates** → Page now reflects the change
+11. **Frontend shows** → "Synced to Confluence ✓" badge
 
 ### Graceful Degradation (No Backend)
 
@@ -82,25 +81,25 @@ If backend is unavailable (GitHub Pages without server):
 1. Frontend `detectBackend()` → Tries to ping `/health` on multiple URLs
 2. **Timeout after 2s** → No backend found
 3. Frontend sets `window.API_CONFIG.available = false`
-4. **Status dropdowns disabled** → Show tooltip "Edit data/tests.json directly on GitHub"
-5. **Dashboard remains readable** → Can still view all data, just can't edit
+4. **Status dropdowns disabled** → Show tooltip "Edit on Confluence directly"
+5. **Dashboard remains readable** → Can still view all data, just can't edit via UI
 
 ---
 
 ## Why This Architecture?
 
-### Problem: Exposing GitHub PAT
+### Problem: Sharing Confluence Credentials
 
-❌ **Bad approach:** Share a GitHub PAT with team members
+❌ **Bad approach:** Share a Confluence API token with team members
 - Security risk (token in browsers, chat, code)
 - Hard to rotate
 - Can't audit who changed what
 - Accidentally committed to repos
 
-✅ **Good approach:** PAT stays on server only
+✅ **Good approach:** Token stays on server only
 - Team never sees the token
 - Token in environment variable (secure)
-- Audit trail: commits show timestamp
+- Audit trail: Confluence revisions show timestamp
 - Single point of control
 
 ### Why Unified Server (Not Three Separate Ones)?
@@ -137,24 +136,30 @@ This means:
 | Decision | Rationale | Trade-off |
 |----------|-----------|-----------|
 | **Single Flask app** (not separate servers) | Easier deployment, less confusion | Slightly less flexibility |
-| **GitHub as data store** | Single source of truth, built-in version control | Eventual consistency (~5s delay) |
+| **Confluence as data store** | Single source of truth, built-in versioning | HTML table parsing complexity |
+| **HTML table storage** | Visible in Confluence UI, human-readable | Need to parse/regenerate HTML |
 | **Local storage fallback** | Works offline, no data loss | Needs eventual sync to server |
 | **2-second backend timeout** | Quick user feedback if backend unavailable | May miss slow networks |
 | **POST for updates** (not GET) | Safer, no accidental data changes in logs | Slightly more complex |
-| **Graceful degradation** (read-only if no backend) | Better UX than broken app | Users expect editing and get surprise |
+| **Graceful degradation** | Better UX than broken app | Users expect editing and get surprise |
 
 ---
 
 ## File Organization
 
-### `app.py` (115 lines)
+### `app.py` (130+ lines)
 
 Unified Flask server:
-- **Lines 1-20:** Initialization, Flask setup, CORS
+- **Lines 1-20:** Initialization, Flask setup, CORS, Confluence config
 - **Lines 22-34:** Static file serving (`/`, `/<path:path>`)
-- **Lines 36-62:** GitHub API proxy functions
-- **Lines 64-96:** API endpoints (`/api/update-status`, `/health`)
-- **Lines 98-101:** Server startup
+- **Lines 36-95:** Confluence API proxy functions
+  - `get_confluence_page()` — Fetch page content
+  - `parse_table_to_tests()` — Extract test data from HTML
+  - `tests_to_table_html()` — Convert data back to HTML
+  - `get_tests_data()` — Wrapper that fetches and parses
+  - `update_confluence_page()` — Post updated content
+- **Lines 97-132:** API endpoints (`/api/update-status`, `/health`)
+- **Lines 134-138:** Server startup
 
 ### `index.html` (430+ lines)
 
@@ -169,21 +174,16 @@ Dashboard SPA:
   - **Lines 354-420:** Table rendering (`renderTable()`)
   - **Lines 424-430:** Page initialization (`init()`)
 
-### `data/tests.json`
+### Confluence Page (FwR7HAE)
 
-Test audit data:
-```json
-[
-  {
-    "testId": "CT-101",
-    "platform": "Web",
-    "month": "April",
-    "name": "Test name",
-    "pm": "PM name",
-    "status": "Has iOS + Android deliverables"
-  }
-]
-```
+Test audit data stored as HTML table at:
+https://trivago.atlassian.net/wiki/x/FwR7HAE
+
+The page contains:
+- Introductory paragraph
+- HTML table with test data (Test ID | Name | PM | Platform | Month | Status)
+
+Backend parses this table, updates cells, and regenerates the HTML.
 
 ---
 
@@ -194,22 +194,22 @@ Test audit data:
 Developer machine:
 ├─ python3 app.py  → Backend listening on localhost:5000
 ├─ Browser: http://localhost:5000
-└─ GITHUB_TOKEN set in shell
+└─ CONFLUENCE_TOKEN set in shell
 ```
 
 ### Scenario 2: GitHub Pages (Read-Only)
 ```
 trvemartins/onetrivago main branch
 ├─ index.html (served by GitHub Pages)
-├─ data/tests.json (readable)
-└─ app.py (ignored by Pages, no server running)
+├─ (no backend running)
+└─ app.py (ignored by Pages, not served)
 ```
 
 ### Scenario 3: Cloud Deployment (Recommended)
 ```
 Render/Fly.io:
 ├─ Docker container with gunicorn + Flask
-├─ GITHUB_TOKEN in environment
+├─ CONFLUENCE_TOKEN in environment
 ├─ URL: https://onetrivago-xxxxx.onrender.com
 └─ Team accesses: https://onetrivago-xxxxx.onrender.com
 ```
@@ -221,9 +221,9 @@ Render/Fly.io:
 ### Token Exposure
 
 ✅ **Secure:**
-- `GITHUB_TOKEN` in environment variables (Render, Fly.io, .env)
+- `CONFLUENCE_TOKEN` in environment variables (Render, Fly.io, .env)
 - Token never in code, never sent to browser
-- Only server-side uses token for GitHub API
+- Only server-side uses token for Confluence API
 
 ❌ **Insecure:**
 - Token in git commits (NEVER)
@@ -240,7 +240,7 @@ Render/Fly.io:
 ⚠️ **Current limitations:**
 - No authentication on `/api/update-status` (anyone on network can edit)
 - No rate limiting (someone could hammer the API)
-- No audit log of who changed what
+- No audit log of who changed what (Confluence handles this automatically)
 
 **If needed in future:** Add optional auth middleware (JWT tokens, IP whitelist, etc.)
 
@@ -257,11 +257,11 @@ Render/Fly.io:
 
 ### Backend (Server)
 
-- **GitHub API calls:** Each update = 2 GitHub API calls (fetch + commit)
-- **Rate limit:** GitHub allows ~60 unauthenticated, unlimited authenticated per hour
-- **No caching:** Always fetches fresh data from GitHub (simple but slower)
+- **Confluence API calls:** Each update = 2 API calls (fetch page + update page)
+- **Rate limit:** Confluence allows unlimited API calls for authenticated users
+- **No caching:** Always fetches fresh page (simple but slower)
 
-**If needed in future:** Cache tests.json locally, validate before commit
+**If needed in future:** Cache page content locally, validate before update
 
 ---
 
@@ -271,8 +271,8 @@ Render/Fly.io:
 - [ ] Health endpoint works: `curl http://localhost:5000/health`
 - [ ] Frontend loads: `http://localhost:5000/` shows dashboard
 - [ ] Backend detected: Status badge shows "✓ Backend connected"
-- [ ] Status update works: Click dropdown → "Synced to GitHub ✓"
-- [ ] GitHub commit created: Check repo commits
+- [ ] Status update works: Click dropdown → "Synced to Confluence ✓"
+- [ ] Confluence page updated: Check page for new status value
 - [ ] GitHub Pages works: https://trvemartins.github.io/onetrivago/ shows read-only
 - [ ] Graceful fallback: Kill backend, reload page, status dropdowns disabled
 
@@ -280,12 +280,12 @@ Render/Fly.io:
 
 ## Future Improvements
 
-1. **Caching** — Cache `data/tests.json` locally to reduce GitHub API calls
-2. **Validation** — Validate test data before committing (schema validation)
+1. **Caching** — Cache page content locally to reduce Confluence API calls
+2. **Validation** — Validate test data before updating (schema validation)
 3. **Authentication** — Add optional password/token protection to editing
-4. **Audit log** — Track who changed what and when
+4. **Audit log** — Track who changed what and when (beyond Confluence revisions)
 5. **Conflict resolution** — Handle simultaneous edits from multiple users
-6. **Webhooks** — Auto-refresh frontend when data changes on GitHub
+6. **Webhooks** — Auto-refresh frontend when Confluence page changes
 7. **Search/filter** — More advanced data filtering (currently basic)
 8. **Export** — Download dashboard data as CSV/PDF
 9. **Version history** — View and restore previous versions of tests
