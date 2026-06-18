@@ -41,9 +41,12 @@ Recommended for ongoing use — gives team always-on access without running a lo
 
 ## Features
 
-- **Live editing** — Update test status, syncs to GitHub automatically
+- **Jira-powered** — Fetch C-tests directly from Jira, see PM assignments, link to Jira issues
+- **Live editing** — Update test status, syncs to Confluence automatically
 - **Rich metrics** — KPI cards, coverage charts, PM breakdowns, status heatmap
-- **Zero auth** — No GitHub PAT needed for team (backend handles authentication)
+- **PM filtering** — Filter and view tests by Project Manager
+- **Password protected** — Session-based authentication, configurable password
+- **Zero auth** — No Jira/Confluence PAT needed for team (backend handles authentication)
 - **Graceful degradation** — Works read-only on GitHub Pages, full editing with backend
 
 ## Architecture
